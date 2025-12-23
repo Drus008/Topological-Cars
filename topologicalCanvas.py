@@ -52,7 +52,7 @@ class topologicalCanvas():
         if self.vOrientation==-1:
             return self.dimX-x
 
-    def __init__(self, tk:Tk, hOrientation: int, vOrientation: int,  dimX=300, dimY=300, visualHelp = False):
+    def __init__(self, tk:Tk, hOrientation: int, vOrientation: int,  dimX=300, dimY=300, windowW= 400, windowH=400, visualHelp = False):
         """
         Initializes a topological canvas.
 
@@ -67,7 +67,8 @@ class topologicalCanvas():
         Returns:
             A topological canvas with the initialized values.
         """
-        self.canvas: Canvas = Canvas(tk, width=dimX*6, height=dimY*6)
+        self.canvas: Canvas = Canvas(tk, width=windowW, height=windowH,
+                                     scrollregion=(0,0,dimX*6,dimY*6))
         self.visualHelp = visualHelp
         if visualHelp:
             for i in range(6):
@@ -79,6 +80,10 @@ class topologicalCanvas():
         self.hOrientation = hOrientation
         self.dimX = dimX
         self.dimY = dimY
+
+        self.windowX = windowH
+        self.windowY = windowW
+
         self.nElements = 0
 
         self.lastTime = time.perf_counter()
@@ -128,6 +133,38 @@ class topologicalCanvas():
         newTime = time.perf_counter()
         self.delta = newTime - self.lastTime
         self.lastTime = newTime
+    
+    def getCamaraPosition(self)->np.array:
+
+        fraccionx = self.canvas.xview()[0]
+        fracciony = self.canvas.yview()[0]
+
+        camarax = fraccionx * 6*self.dimX + self.windowX/2
+        camaray = fracciony * 6*self.dimY + self.windowY/2
+
+        camarax = camarax - self.dimX*2
+        camaray = camaray - self.dimY*2
+
+        return np.array([camarax, camaray])
+    
+    def setCamaraPosition(self, x:float, y:float)->np.array:
+
+        camarax = x + self.dimX*2
+        camaray = y + self.dimY*2
+        print(camarax, camaray, end="| ")
+        fraccionx = (camarax - self.windowX/2)/(6*self.dimX)
+        fracciony = (camaray - self.windowY/2)/(6*self.dimY)
+        print(fraccionx, fracciony,end="| ")
+
+        self.canvas.xview_moveto(fraccionx)
+        self.canvas.yview_moveto(fracciony)
+        print(self.getCamaraPosition())
+
+        
+
+        
+
+        return np.array([camarax, camaray])
 
 
 class torus(topologicalCanvas):
@@ -241,9 +278,9 @@ class topologicalObject:
         rotation = rotationMatrix(rads)
         
         vertices = np.array(self.TCanvas.canvas.coords(self.objects[0][0])).reshape(-1, 2)
-        print(vertices[0])
+        
         rotatedVertices = (vertices -self.position)@rotation.T + self.position
-        print(rotatedVertices[0])
+        
         rotatedCopies = []
         for r in range(6):
             rList = []
@@ -257,7 +294,6 @@ class topologicalObject:
                 for c in range(6):
                     rotatedCopies[r][c].append(tPoint[r][c][0])
                     rotatedCopies[r][c].append(tPoint[r][c][1])
-        print(rotatedCopies[0][0][0],rotatedCopies[0][0][1])
         for r in range(6):
             for c in range(6):
                 objId = self.objects[r][c]

@@ -48,6 +48,8 @@ class topologicalCar():
 
         self.width = width
         self.height = height
+
+        self.following = True
         
     
     def updateCar(self):
@@ -57,7 +59,12 @@ class topologicalCar():
         self.aplyFriction()
         self.keyboardManagment()
         self.updatePosition()
+        self.updateCamara()
     
+    def updateCamara(self):
+        print(self.body.position, end=" ")
+        self.TCanvas.setCamaraPosition(self.body.position[0], self.body.position[1])
+
     def updatePosition(self):
         """
         Updates the topological position of the car based on his speed and its speed.
@@ -76,7 +83,7 @@ class topologicalCar():
 
         TODO consider diferent friction coeficient based on the terrain.
         """
-        tangentFriction = 0.4
+        tangentFriction = 0.1
         perpFriction = 2
         tangDirection = direcrion2D(self.angle)
         perpDirection = np.array((tangDirection[1], -tangDirection[0]))
@@ -120,7 +127,7 @@ class topologicalCar():
         if np.dot(self.v,direcrion2D(self.angle))<0:
             orientation = -orientation
         delta = self.TCanvas.delta
-        angle = orientation*delta*self.angVel*np.linalg.norm(self.v)
+        angle = 5*orientation*delta*self.angVel*np.log(np.linalg.norm(self.v)+1)
         self.angle = self.angle+angle
         self.body.TRotation(angle)
 
@@ -137,12 +144,12 @@ class topologicalCar():
             self.rotateCar(1)
         if self.TCanvas.keyStates["d"]:
             self.rotateCar(-1)
-        
 
-        
-    
+
+
+
 if __name__=="__main__":
-    size = 100
+    size = 200
 
     tk = Tk()
     Topos = topologicalCanvas(tk, hOrientation=-1, vOrientation=-1, dimX= size, dimY= size, visualHelp= True)
@@ -160,4 +167,3 @@ if __name__=="__main__":
         
         car.updateCar()
         Topos.canvas.update()
-        
