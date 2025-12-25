@@ -15,8 +15,9 @@ class topologicalObject:
         Tid (str): The id of the element on the topological canvas. It is a string with the format "Tid"+int.
         position (array): The position where the object will be placed.
         objects (List[List[int]]): A matrix where the i,j element is the id of the copy of the original object placed at the canvas i,j.
+        zIndex: Used to manage som deepth related aspects.
     """
-    def __init__(self, instances:list[list[int]], Tid, canvas: topologicalCanvas, x0=0, y0=0):
+    def __init__(self, instances:list[list[int]], Tid, canvas: topologicalCanvas, x0=0, y0=0, zIndex = 0):
         """
         Creates a object on the topological space.
 
@@ -28,6 +29,7 @@ class topologicalObject:
         self.position = np.array([x0, y0])
         self.Tid = Tid
         self.TCanvas = canvas
+        self.zIndex = zIndex
         self.objects = instances.copy()
     
 
@@ -116,7 +118,7 @@ class topologicalLine(topologicalObject):
     """
     Represents a line on a topological canvas.
     """
-    def __init__(self, TCanvas:topologicalCanvas, pInitial: np.array, pFinal: np.array, tags: list[str] = [])-> int:
+    def __init__(self, TCanvas:topologicalCanvas, pInitial: np.array, pFinal: np.array, tags: list[str] = [], zIndex = 0)-> int:
         """
         Creates a line on the topological space.
 
@@ -143,14 +145,14 @@ class topologicalLine(topologicalObject):
                 idRow.append(TCanvas.canvas.create_line(initialPoints[r][c][0], initialPoints[r][c][1], finalPoints[r][c][0], finalPoints[r][c][1], tags=tags))
             idMatrix.append(idRow)
         position = (initialPoints[0][0]+finalPoints[0][0])/2
-        super().__init__(idMatrix,tags[-1], TCanvas, position[0], position[1])
+        super().__init__(idMatrix,tags[-1], TCanvas, position[0], position[1], zIndex=zIndex)
 
 
 class topologicalPolygon(topologicalObject):
     """
     Represents a polygon on a topological canvas.
     """
-    def __init__(self, TCanvas:topologicalCanvas, pointList: list[np.array], fill:str="black", tags = [])-> int:
+    def __init__(self, TCanvas:topologicalCanvas, pointList: list[np.array], fill:str="black", tags = [], zIndex = 0)-> int:
         """
         Creates a polygon on the topological space.
 
@@ -167,6 +169,8 @@ class topologicalPolygon(topologicalObject):
 
         tags.append("Tid"+str(TCanvas.nElements))
         TCanvas.nElements = TCanvas.nElements+1
+
+        self.localVertices = pointList.copy()
 
         vertices = []
         for point in pointList:
@@ -190,11 +194,79 @@ class topologicalPolygon(topologicalObject):
         for i in range(1,len(vertices)):
             position = position + vertices[i][0][0]
         position = position/len(vertices)
-        super().__init__(idMatrix,tags[-1], TCanvas, position[0], position[1])
+        
+        super().__init__(idMatrix,tags[-1], TCanvas, position[0], position[1], zIndex=zIndex)
+
+
+    # Useless function right now
+    def createLocalBoundry(self, vertices: list[np.array]):
+        """(Unused function)Creates a list of points that forms the boundry of the polygon."""
+        PRECISION = 1
+        
+        numbPoints = len(vertices)
+        allPointNear = False
+        points = vertices.copy()
+        
+        iterations = 0
+        #This code could be faster by avoiding to check the already checked segments
+        while not allPointNear:
+            iterations = iterations+1
+            if iterations%100==0:
+                print(iterations, end=", ")
+            newPoints = []
+            allPointNear=True
+
+            numbPoints = len(points)
+            for nPoint in range(numbPoints):
+                actualPoint = points[nPoint]
+                prevPoint = points[nPoint-1]
+                vector = prevPoint-actualPoint
+                prevDist = np.linalg.norm(vector)
+                newPoints.append(prevPoint)
+                if prevDist>PRECISION:
+                    newPoint = actualPoint+vector/2
+                    newPoints.append(newPoint)
+                    allPointNear=False
+            points = newPoints
+        self.localBoundry = points
+
+    def checkIfPointInside(self, point:np.array)->bool:
+        """Given a point, it checks if the point is inside the polygon.
+        
+        Args:
+            (array): The coordinates of the point.
+        Returns:
+            True if the point is inside the polygon and false otherwise.
+        """
+
+        localPoint = self.TCanvas.reflectedPoint(point)
+        cutsCounter = 0
+        for i in range(len(self.localVertices)):
+            prevPoint = self.localVertices[i-1]
+            nextPoint = self.localVertices[i]
+            if prevPoint[1]>localPoint[1] or nextPoint[1]>localPoint[1]:
+                if (prevPoint[0]-localPoint[0])*(nextPoint[0]-localPoint[0])<0:
+                    cutsCounter = cutsCounter +1
+        if cutsCounter%2==1:
+            return True
+
+        return False
+
+
+
 
 class topologicalThickCurve(topologicalPolygon):
-    def __init__(self, TCanvas:topologicalCanvas, points:list[np.array], amplitude: list[float], fill: str="black", tags: list[str] = []):
-
+    """It represents a thick curve on the topological canvas."""
+    def __init__(self, TCanvas:topologicalCanvas, points:list[np.array], amplitude: list[float], fill: str="black", zIndex = 0, tags: list[str] = []):
+        """
+        It generates the thick line.
+        
+        Args:
+            TCanvas (topologicalCanvas): The topological canvas where the thick curve will be drown.
+            points (list[array]): The list of points conforming the original curve.
+            amplitude: list[float]: The amplitud of the curve at each point.
+            fill (str): The collor of the curve.
+        """
         self.nPoints = len(points)
 
         if type(amplitude)==float:
@@ -215,10 +287,11 @@ class topologicalThickCurve(topologicalPolygon):
         self.interior = []
         vertices = self.ofset1 + self.ofset2[::-1]
         
-        super().__init__(TCanvas, vertices, fill,tags)
+        super().__init__(TCanvas, vertices, fill,tags, zIndex=zIndex)
     
 
-    def createOffset(self): #TODO manage final point
+    def createOffset(self):
+        """Given a curve, creates an offset to each side"""
         curve = self.center
         amplitudes = self.aplitudes
         ofset1 = []
@@ -232,15 +305,31 @@ class topologicalThickCurve(topologicalPolygon):
         return [ofset1,ofset2]
 
 
+# Usless class.
+class objectsManager():
+    def __init__(self, TCanvas: topologicalCanvas, objects: list[topologicalObject]):
 
-if __name__=="__main__":
+        for obj in objects:
+            if TCanvas!=obj.TCanvas:
+                self.errorHandeler("canvasIncompatibility")
 
-    size = 100
+        self.objects = objects.copy()
+        self.TCanvas = TCanvas
+    
+    def addObject(self, obj: topologicalObject):
+        if obj.TCanvas!=self.TCanvas:
+            self.errorHandeler("canvasIncompatibility")
+        self.objects.append(obj)
 
-    tk = Tk()
-    Topos = topologicalCanvas(tk, hOrientation=1, vOrientation=-1, dimX= size, dimY= size, visualHelp= True)
+    def addObjects(self, objects: list[topologicalObject]):
+        for obj in objects:
+            if obj.TCanvas!=self.TCanvas:
+                self.errorHandeler("canvasIncompatibility")
+            self.objects.append(obj)
+    
 
-    topologicalLine(Topos,[20,20],[50, 20])
-    topologicalPolygon(Topos,[[30,30],[50, 30], [50,50]])
+    def errorHandeler(self, error:str):
+        if error=="canvasIncompatibility":
+            raise ValueError("Error found when adding object due to canvas incomatibility")
 
-    tk.mainloop()
+

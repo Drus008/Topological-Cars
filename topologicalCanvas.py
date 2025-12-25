@@ -96,7 +96,20 @@ class topologicalCanvas():
 
         self.canvas.config(takefocus=True)
         self.canvas.focus_set()
+    
+    
+    def reflectedPoint(self, point:np.array)->np.array:
+        """Given the coordinates of a point, returns its local coordinates"""
+        newX=point[0]%self.dimX
+        newY=point[1]%self.dimY
+        #This coud be optimiced if needed
+        if point[0]%(2*self.dimX)>self.dimX:
+            newY = self.gluingFuncH(newY)
+        if point[1]%(2*self.dimY)>self.dimY:
+            newX = self.gluingFuncV(newX)
+        return np.array([newX,newY])
         
+
     def topologicalPoint(self, x: float, y: float)->np.array:
         """
         Given the coordinates of a point, returns the coordenates of each copy of the point in the topological canvas.
@@ -135,7 +148,7 @@ class topologicalCanvas():
         self.lastTime = newTime
     
     def getCamaraPosition(self)->np.array:
-
+        """Retuns the position of the camara on the local canvas"""
         fraccionx = self.canvas.xview()[0]
         fracciony = self.canvas.yview()[0]
 
@@ -148,7 +161,7 @@ class topologicalCanvas():
         return np.array([camarax, camaray])
     
     def setCamaraPosition(self, x:float, y:float)->np.array:
-
+        """Sets the position of the camara to a specific point"""
         camarax = x + self.dimX*2
         camaray = y + self.dimY*2
         fraccionx = (camarax - self.windowX/2)/(6*self.dimX)
@@ -188,18 +201,3 @@ class KleinBottleV(topologicalCanvas):
     def __init__(self, tk, dimX=300, dimY=300, visualHelp=False):
         super().__init__(tk, -1, 1, dimX, dimY, visualHelp)
 
-
-
-if __name__=="__main__":
-
-    size = 100
-
-    tk = Tk()
-    Topos = topologicalCanvas(tk, hOrientation=1, vOrientation=-1, dimX= size, dimY= size, windowH=600, windowW= 600, visualHelp= True)
-
-    from topologicalObjects import topologicalLine, topologicalPolygon
-
-    topologicalLine(Topos,[20,20],[50, 20])
-    topologicalPolygon(Topos,[[30,30],[50, 30], [50,50]])
-
-    tk.mainloop()

@@ -1,11 +1,10 @@
-from topologicalObjects import topologicalPolygon, topologicalThickCurve
+from topologicalObjects import topologicalPolygon
 from topologicalCanvas import topologicalCanvas
+from topologicalTerrain import terrainManager
 from numpy import pi
 import numpy as np
-from tkinter import Tk, StringVar
-from Tmath import direcrion2D, baseChange, baseChangeOrt, baseReturnOrt
-
-from monitor import windowMonitor
+from tkinter import StringVar
+from Tmath import direcrion2D, baseChange, baseChangeOrt, baseReturnOrt, sigmoid
 
 class topologicalCar():
     """
@@ -22,7 +21,7 @@ class topologicalCar():
         angVel (float): The speed at wich the car turns.
     """
 
-    def __init__(self, TCanvas: topologicalCanvas, x0:float, y0:float, height:float, width:float, acc=1, v0x = 0, v0y=0,rotationSpeed = 1):
+    def __init__(self, TCanvas: topologicalCanvas, ground:terrainManager, x0:float, y0:float, height:float, width:float, acc=1, v0x = 0, v0y=0,rotationSpeed = 1):
         
         """
         Initializes the car given tha basic parameters.
@@ -41,8 +40,14 @@ class topologicalCar():
             A topological car.
         """
 
+        self.aeroCoef = 1
+        self.wheight = 1
+        self.wheelGreep = 1
+
         self.TCanvas = TCanvas
-        self.body = topologicalPolygon(TCanvas, [[x0-width/2,y0-height/2], [x0+width/2,y0-height/2], [x0+width/2,y0+height/2], [x0-width/2,y0+height/2]], tags=["topologicalCar"])
+        self.body = topologicalPolygon(TCanvas, [np.array([x0-width/2,y0-height/2]), np.array([x0+width/2,y0-height/2]), np.array([x0+width/2,y0+height/2]), np.array([x0-width/2,y0+height/2])], tags=["topologicalCar"])
+        self.ground = ground
+        
         self.v = np.array([v0x, v0y], float)
         self.a = acc
         self.angle = pi/2
@@ -60,17 +65,18 @@ class topologicalCar():
         """
         Manages the car updates on each frame. (It has to be called).
         """
-        self.aplyFriction()
+        #self.aplyFriction()
+        self.calcAcc()
         self.keyboardManagment()
         self.updatePosition()
-        self.updateCamara()
+        self.centerCamara()
 
         self.vars["v"].set(str(round(self.v[0],3))+" "+str(round(self.v[1],3))) 
         self.vars["Position"].set(str(self.body.position)) 
         self.vars["angle"].set(str(self.angle)) 
     
-    def updateCamara(self):
-        
+    def centerCamara(self):
+        """Centers de camara on the car."""
         self.TCanvas.setCamaraPosition(self.body.position[0], self.body.position[1])
 
     def updatePosition(self):
@@ -85,45 +91,30 @@ class topologicalCar():
         self.body.TMove(dx,dy)
     
 
-    def aplyFriction(self):
-        """
-        Aplies the friction to the car slowing it down based on its speed and direction.
+    def calcAcc(self):
+        """Computes the acceleration of the car and updates its speed."""
 
-        TODO consider diferent friction coeficient based on the terrain.
-        """
-        tangentFriction = 0.1
-        perpFriction = 20
+
+        power = 0
+        if self.TCanvas.keyStates["w"]:
+            power = 1
+        if self.TCanvas.keyStates["s"]:
+            power = -1
+        
+        power = power*self.a
+
+        AIR_FRICTION = 0.5
+        GRIP, GROUND_FRICTION = self.ground.getFriction(self.body.position)
+
         tangDirection = direcrion2D(self.angle)
         perpDirection = np.array((tangDirection[1], -tangDirection[0]))
-
-        delta = self.TCanvas.delta
-                                                    #TODO the 100 is complitly arbitrary
-        gripReduction = np.exp(-np.linalg.norm(self.v)/100) #Models the reduction of the wheel grip due to high speed.
-        self.vars["Grip reduction"].set(str(round(gripReduction, 2)))
+        acc = tangDirection*power*10
+        acc = acc - self.v*AIR_FRICTION
+        speedCoef = np.exp(-np.linalg.norm(self.v)/250)
+        acc = acc - np.sign(np.dot(self.v,tangDirection))*tangDirection*GROUND_FRICTION
+        acc = acc - speedCoef*GRIP*np.dot(self.v,perpDirection)*perpDirection
         
-        vel = baseChangeOrt(tangDirection, perpDirection, self.v)
-        vel[0] = -vel[0]*tangentFriction*delta
-        vel[1] = -vel[1]*perpFriction*delta*gripReduction
-
-        friction = baseReturnOrt(tangDirection, perpDirection, vel)
-
-        self.v[0] = self.v[0] + friction[0]
-        self.v[1] = self.v[1] + friction[1]
-        
-
-    def aplyAcceleration(self, sign):
-        """
-        Modifies the velocity of the car based on its acceleration.
-
-        Args:
-            sign (sign): Determines if it is puching forward or backwards.
-
-        """
-
-        delta = self.TCanvas.delta
-        
-        self.v[0] = self.v[0] + sign*delta*self.a*np.cos(self.angle)
-        self.v[1] = self.v[1] + sign*delta*self.a*np.sin(self.angle)
+        self.v = self.v + acc*self.TCanvas.delta
         
     def rotateCar(self, sign):
         """
@@ -150,10 +141,6 @@ class topologicalCar():
         Manages how the car interacts with the keyboard imputs.
         """
         
-        if self.TCanvas.keyStates["w"]:
-            self.aplyAcceleration(1)
-        if self.TCanvas.keyStates["s"]:
-            self.aplyAcceleration(-1)
         if self.TCanvas.keyStates["a"]:
             self.rotateCar(1)
         if self.TCanvas.keyStates["d"]:
@@ -161,29 +148,3 @@ class topologicalCar():
 
 
 
-if __name__=="__main__":
-    size = 200
-
-    tk = Tk()
-    Topos = topologicalCanvas(tk, hOrientation=-1, vOrientation=-1, dimX= size, dimY= size, visualHelp= True)
-
-
-    topologicalThickCurve(Topos, [np.array([100, 0]), np.array([100, 50]), np.array([100, 100]), np.array([100, 150]), np.array([100, 200])], [10, 20, 30, 40, 50], "black")
-    
-
-    topologicalPolygon(Topos,[[30,30],[50, 30], [50,50]])
-    topologicalPolygon(Topos,[[0,0],[10, 0], [10,10], [0, 10]])
-    print("Car1")
-    car = topologicalCar(Topos, x0=20, y0=20, height=20, width=10, acc=50, v0x=0, v0y=0)
-
-
-    cont = True
-    
-    while(True):
-        car.TCanvas.updateDelta()
-        
-        car.updateCar()
-        Topos.canvas.update()
-        if cont:
-            windowMonitor(tk, car.vars)
-            cont = False
