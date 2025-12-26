@@ -4,7 +4,9 @@ from topologicalTerrain import terrainManager
 from numpy import pi
 import numpy as np
 from tkinter import StringVar
-from Tmath import direcrion2D, baseChange, baseChangeOrt, baseReturnOrt, sigmoid
+from Tmath import direcrion2D
+
+import json
 
 class topologicalCar():
     """
@@ -21,7 +23,7 @@ class topologicalCar():
         angVel (float): The speed at wich the car turns.
     """
 
-    def __init__(self, TCanvas: topologicalCanvas, ground:terrainManager, x0:float, y0:float, height:float, width:float, acc=1, v0x = 0, v0y=0,rotationSpeed = 1):
+    def __init__(self, TCanvas: topologicalCanvas, ground:terrainManager, x0:float, y0:float, height:float, width:float, color="blue", acc=1, v0x = 0, v0y=0,rotationSpeed = 1):
         
         """
         Initializes the car given tha basic parameters.
@@ -45,7 +47,7 @@ class topologicalCar():
         self.wheelGreep = 1
 
         self.TCanvas = TCanvas
-        self.body = topologicalPolygon(TCanvas, [np.array([x0-width/2,y0-height/2]), np.array([x0+width/2,y0-height/2]), np.array([x0+width/2,y0+height/2]), np.array([x0-width/2,y0+height/2])], tags=["topologicalCar"])
+        self.body = topologicalPolygon(TCanvas, [np.array([x0-width/2,y0-height/2]), np.array([x0+width/2,y0-height/2]), np.array([x0+width/2,y0+height/2]), np.array([x0-width/2,y0+height/2])], fill=color, tags=["topologicalCar"])
         self.ground = ground
         
         self.v = np.array([v0x, v0y], float)
@@ -59,6 +61,8 @@ class topologicalCar():
 
         self.following = True
         self.vars = {"v" : StringVar(value=""),"Position" : StringVar(value=""), "angle" : StringVar(value=""),"Grip reduction" : StringVar(value="")}
+
+        self.trajectory = [] #TODO description
         
     
     def updateCar(self):
@@ -146,5 +150,17 @@ class topologicalCar():
         if self.TCanvas.keyStates["d"]:
             self.rotateCar(-1)
 
+    def updateTrajectory(self):
+        if len(self.trajectory)==0:
+            time = 0
+        else:
+            time = self.trajectory[-1]["t"]+self.TCanvas.delta
+        self.trajectory.append({"x":self.body.position[0],
+                                "y":self.body.position[1],
+                                "angle": self.angle,
+                                "t":time})
 
-
+    def save(self, map:str, player:str):
+        trajectoryFile = {"map": map, "player": player, "trajectory":self.trajectory}
+        with open(map+player+".json", "w") as f:
+            json.dump(trajectoryFile, f, indent=2)

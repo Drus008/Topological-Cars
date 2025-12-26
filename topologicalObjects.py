@@ -1,7 +1,7 @@
 from topologicalCanvas import topologicalCanvas
 import numpy as np
 from tkinter import Tk
-from Tmath import rotationMatrix
+from Tmath import rotationMatrix, direcrion2D
 
 
 class topologicalObject:
@@ -198,6 +198,24 @@ class topologicalPolygon(topologicalObject):
         super().__init__(idMatrix,tags[-1], TCanvas, position[0], position[1], zIndex=zIndex)
 
 
+    @classmethod
+    def rectangle(cls, TCanvas:topologicalCanvas, center: np.array, hight: float, width:float, angle: float, fill:str="black", tags=[], zIndex=0):
+        vector1 = direcrion2D(angle)
+        vector2 = np.array([vector1[1], -vector1[0]])
+        vertex1 = center+(width*vector2 - hight*vector1)/2
+        vertex2 = center+(width*vector2 + hight*vector1)/2
+        vertex3 = center+(-width*vector2 + hight*vector1)/2
+        vertex4 = center+(-width*vector2 - hight*vector1)/2
+
+        return cls(TCanvas, [vertex1, vertex2, vertex3, vertex4], fill, tags, zIndex)
+    
+    @classmethod
+    def square(cls, TCanvas:topologicalCanvas, center: np.array, size:float, angle: float, fill:str="black", tags=[], zIndex=0):
+        return cls.rectangle(TCanvas, center, size, size, angle, fill, tags, zIndex)
+
+
+
+
     # Useless function right now
     def createLocalBoundry(self, vertices: list[np.array]):
         """(Unused function)Creates a list of points that forms the boundry of the polygon."""
@@ -268,13 +286,14 @@ class topologicalThickCurve(topologicalPolygon):
             fill (str): The collor of the curve.
         """
         self.nPoints = len(points)
-
-        if type(amplitude)==float:
-            self.amplitude = []
+        
+        if len(amplitude)==1:
+            print("YES")
+            self.amplitudes = []
             for _ in range(self.nPoints):
-                self.amplitude.append(amplitude)
+                self.amplitudes.append(amplitude[0])
         else:
-            self.aplitudes = amplitude
+            self.amplitudes = amplitude
 
         self.center = points
         self.TCanvas = TCanvas
@@ -293,7 +312,7 @@ class topologicalThickCurve(topologicalPolygon):
     def createOffset(self):
         """Given a curve, creates an offset to each side"""
         curve = self.center
-        amplitudes = self.aplitudes
+        amplitudes = self.amplitudes
         ofset1 = []
         ofset2 = []
         for i in range(len(curve)-1):
@@ -303,6 +322,9 @@ class topologicalThickCurve(topologicalPolygon):
             ofset1.append(curve[i]+orto)
             ofset2.append(curve[i]-orto)
         return [ofset1,ofset2]
+    
+    def getStart(self)->np.array:
+        return np.array([self.ofset1[0], self.ofset2[0]])
 
 
 # Usless class.

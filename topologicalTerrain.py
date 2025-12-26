@@ -1,7 +1,8 @@
 from topologicalCanvas import topologicalCanvas
-from topologicalObjects import topologicalThickCurve, topologicalPolygon
-from bisect import insort
+from topologicalObjects import topologicalPolygon, topologicalThickCurve
+from Tmath import direcrion2D
 import numpy as np
+
 
 
 class terrainManager:
@@ -50,4 +51,3 @@ class terrainManager:
             if terrain.checkIfPointInside(point):
                 return terrain.friction, terrain.grip
         return 10, 10
-

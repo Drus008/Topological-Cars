@@ -67,6 +67,7 @@ class topologicalCanvas():
         Returns:
             A topological canvas with the initialized values.
         """
+        self.root = tk
         self.canvas: Canvas = Canvas(tk, width=windowW, height=windowH,
                                      scrollregion=(0,0,dimX*6,dimY*6))
         self.visualHelp = visualHelp
@@ -177,27 +178,27 @@ class torus(topologicalCanvas):
     """
     A topological canvas that represents a Torus.
     """
-    def __init__(self, tk, dimX=300, dimY=300, visualHelp=False):
-        super().__init__(tk, 1, 1, dimX, dimY, visualHelp)
+    def __init__(self, tk, dimX=300, dimY=300, windowW= 400, windowH=400, visualHelp=False):
+        super().__init__(tk, 1, 1, dimX, dimY, windowW=windowW, windowH=windowH, visualHelp=visualHelp)
 
 class projectivePlane(topologicalCanvas):
     """
     A topological canvas that represents the projectiva plane.
     """
-    def __init__(self, tk, dimX=300, dimY=300, visualHelp=False):
-        super().__init__(tk, -1, -1, dimX, dimY, visualHelp)
+    def __init__(self, tk, dimX=300, dimY=300, windowW= 400, windowH=400, visualHelp=False):
+        super().__init__(tk, -1, -1, dimX, dimY, windowW=windowW, windowH=windowH, visualHelp=visualHelp)
 
 class KleinBottleH(topologicalCanvas):
     """
     A topological canvas that represents a Klein bottle (H).
     """
-    def __init__(self, tk, dimX=300, dimY=300, visualHelp=False):
-        super().__init__(tk, 1, -1, dimX, dimY, visualHelp)
+    def __init__(self, tk, dimX=300, dimY=300, windowW= 400, windowH=400, visualHelp=False):
+        super().__init__(tk, 1, -1, dimX, dimY, windowW=windowW, windowH=windowH, visualHelp=visualHelp)
 
 class KleinBottleV(topologicalCanvas):
     """
     A topological canvas that represents a Klein bottle (V).
     """
-    def __init__(self, tk, dimX=300, dimY=300, visualHelp=False):
-        super().__init__(tk, -1, 1, dimX, dimY, visualHelp)
+    def __init__(self, tk, dimX=300, dimY=300, windowW= 400, windowH=400, visualHelp=False):
+        super().__init__(tk, -1, 1, dimX, dimY, windowW=windowW, windowH=windowH, visualHelp=visualHelp)
 
