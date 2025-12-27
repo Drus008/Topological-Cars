@@ -1,6 +1,5 @@
 from topologicalCanvas import topologicalCanvas
 import numpy as np
-from tkinter import Tk
 from Tmath import rotationMatrix, direcrion2D
 
 

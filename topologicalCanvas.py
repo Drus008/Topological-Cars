@@ -88,7 +88,7 @@ class topologicalCanvas():
                 self.canvas.create_line(i*dimX, 0, i*dimX, dimY*6)
                 self.canvas.create_line(0, i*dimY, 6*dimY, i*dimY)
         
-        self.canvas.pack()
+        self.canvas.pack(expand=True, fill="both")
         self.vOrientation = vOrientation
         self.hOrientation = hOrientation
         self.dimX = dimX
@@ -106,6 +106,7 @@ class topologicalCanvas():
 
         self.canvas.bind("<KeyPress>", self.keyStates.keyPresed)
         self.canvas.bind("<KeyRelease>", self.keyStates.keyReleased)
+        self.canvas.bind("<Configure>", self.changeOptions)
 
         self.canvas.config(takefocus=True)
         self.canvas.focus_set()
@@ -184,6 +185,11 @@ class topologicalCanvas():
         self.canvas.yview_moveto(fracciony)
 
         return np.array([camarax, camaray])
+    
+    def changeOptions(self, event):
+        self.windowX = event.width
+        self.windowY = event.height
+
 
 
 class torus(topologicalCanvas):

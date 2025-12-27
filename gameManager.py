@@ -3,6 +3,7 @@ from topologicalCar import topologicalCar
 from topologicalCanvas import torus, KleinBottleV, projectivePlane, topologicalCanvas
 from tkinter import Tk
 from chronometer import finishLine
+from inGameInterface import layout
 
 
 def selectMap(TCanvas: topologicalCanvas, map:str)->terrainManager:
@@ -41,17 +42,21 @@ def configureGame(interface:Tk, space: str, map:str):
         space (str): The name of the space. Options: "torus", "klein", "projective".
         map (str): The name of the map. Options: "Pseudo-Circle".
     """
-    SIZE = 300
+    SIZE = 700
+    LAYOUT_SIZE = 80
+
+    interface.geometry(str(SIZE)+"x"+str(SIZE+LAYOUT_SIZE)+"+"+str((interface.winfo_screenwidth()-SIZE)//2)+"+0")
 
     Topos = selectSpace(interface, space, SIZE)
     terrain = selectMap(Topos, map)
-    
     car = topologicalCar(Topos, x0=20, y0=20, height=20, width=10, ground=terrain, acc=8, v0x=0, v0y=0)
 
     timer = finishLine(terrain.terrains[0], car)
-
+    l = layout(interface)
     while(True):
-        print(Topos.getCamaraPosition())
+        l.speed.updateNumber(int(np.linalg.norm(car.v)))
+        l.timer.showTime(int(timer.time))
+        l.laps.updateNumber(timer.laps)
         car.TCanvas.updateDelta()
         car.updateCar()
         timer.update()
