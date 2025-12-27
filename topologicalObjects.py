@@ -54,7 +54,7 @@ class topologicalObject:
 
     def checkBounds(self)->None:
         """
-        Chech if the object is out of its localCanvas TODO (define local canvas) anv moves it back to tis canvas if is otherwise.
+        Chech if the object is out of its global position and moves it back to its corresponding global space if needed otherwise.
         """
         x = self.position[0]
         if x<0:
@@ -70,7 +70,7 @@ class topologicalObject:
 
     def TMove(self, dx:float, dy:float)->None:
         """
-        Moves all the copies the object and teleports it to its local canvas if it moves out of it.
+        Moves all the copies the object and teleports it to its global canvas if it moves out of it.
 
         Args:
             dx (float): the displacement on the x direction.
@@ -78,37 +78,19 @@ class topologicalObject:
         """
         self.move(dx, dy)
         self.checkBounds()
+
+        
+    def hide(self):
+        """Makes the object invisible"""
+        for r in range(6):
+            for c in range(6):
+                self.TCanvas.canvas.itemconfig(self.objects[r][c], state = "hidden")
     
-    def TRotation(self, rads: float)->None:
-        """
-        It rotates the object a certain angle.
-        
-        Args:
-            rads (float): The angle of rotation.
-        """
-        rotation = rotationMatrix(rads)
-        
-        vertices = np.array(self.TCanvas.canvas.coords(self.objects[0][0])).reshape(-1, 2)
-        
-        rotatedVertices = (vertices -self.position)@rotation.T + self.position
-        
-        rotatedCopies = []
-        for r in range(6):
-            rList = []
-            for c in range(6):
-                rList.append([])
-            rotatedCopies.append(rList)
-        
-        for point in rotatedVertices:
-            tPoint = self.TCanvas.topologicalPoint(point[0], point[1])
-            for r in range(6):
-                for c in range(6):
-                    rotatedCopies[r][c].append(tPoint[r][c][0])
-                    rotatedCopies[r][c].append(tPoint[r][c][1])
+    def unhide(self):
+        """Makes the object visible"""
         for r in range(6):
             for c in range(6):
-                objId = self.objects[r][c]
-                self.TCanvas.canvas.coords(objId, *rotatedCopies[r][c])
+                self.TCanvas.canvas.itemconfig(self.objects[r][c], state = "normal")
 
 
         
@@ -151,6 +133,11 @@ class topologicalLine(topologicalObject):
 class topologicalPolygon(topologicalObject):
     """
     Represents a polygon on a topological canvas.
+
+    Atributes:
+        color (str): The color of the interior of the polygon.
+        localVerices (list[array]): A list of the local coordinates of the vertices of the polygon.
+
     """
     def __init__(self, TCanvas:topologicalCanvas, pointList: list[np.array], fill:str="black", tags = [], zIndex = 0)-> int:
         """
@@ -159,7 +146,9 @@ class topologicalPolygon(topologicalObject):
         Args:
             TCanvas (topologicalCanvas): The topological canvas where the line will live.
             pointList (list[np.array]): A list of 2D arrays that represents the coodinates of edges of the polygon
+            fill (str): The interior color of the polygon. It suports all the collors from tkinter.
             tags (list[str]): Tags assigned to the objecto of the canvas.
+            zIndex (float): Its zIndex.
 
         Returns:
             The topological ID of the polygon.
@@ -197,9 +186,52 @@ class topologicalPolygon(topologicalObject):
         
         super().__init__(idMatrix,tags[-1], TCanvas, position[0], position[1], zIndex=zIndex)
 
+    def TRotation(self, rads: float)->None:
+        """
+        It rotates the object a certain angle (relative).
+        
+        Args:
+            rads (float): The angle of rotation.
+        """
+        rotation = rotationMatrix(rads)
+        
+        vertices = np.array(self.TCanvas.canvas.coords(self.objects[0][0])).reshape(-1, 2)
+        
+        rotatedVertices = (vertices -self.position)@rotation.T + self.position
+        
+        rotatedCopies = []
+        for r in range(6):
+            rList = []
+            for c in range(6):
+                rList.append([])
+            rotatedCopies.append(rList)
+        
+        for point in rotatedVertices:
+            tPoint = self.TCanvas.topologicalPoint(point[0], point[1])
+            for r in range(6):
+                for c in range(6):
+                    rotatedCopies[r][c].append(tPoint[r][c][0])
+                    rotatedCopies[r][c].append(tPoint[r][c][1])
+        for r in range(6):
+            for c in range(6):
+                objId = self.objects[r][c]
+                self.TCanvas.canvas.coords(objId, *rotatedCopies[r][c])
 
     @classmethod
     def rectangle(cls, TCanvas:topologicalCanvas, center: np.array, hight: float, width:float, angle: float, fill:str="black", tags=[], zIndex=0):
+        """
+        Creates a rectangle.
+
+        Args:
+            TCanvas (topologicalCanvas): The topological canvas where the rectangle will be drawn.
+            Center (array): The center of the recangle.
+            hight (float): The hight of the rectangle.
+            width (float): The width of the rectangle.
+            angle (float): The angle that the rectangle will be facing.
+            fill (str): The interior color of the polygon. It suports all the collors from tkinter.
+            tags (list[str]): Tags assigned to the objecto of the canvas.
+            zIndex (float): Its zIndex.
+        """
         vector1 = direcrion2D(angle)
         vector2 = np.array([vector1[1], -vector1[0]])
         vertex1 = center+(width*vector2 - hight*vector1)/2
@@ -211,9 +243,41 @@ class topologicalPolygon(topologicalObject):
     
     @classmethod
     def square(cls, TCanvas:topologicalCanvas, center: np.array, size:float, angle: float, fill:str="black", tags=[], zIndex=0):
+        """
+        Creates a square.
+
+        Args:
+            TCanvas (topologicalCanvas): The topological canvas where the rectangle will be drawn.
+            Center (array): The center of the recangle.
+            size (float): The size of each side of the square.
+            angle (float): The angle that the rectangle will be facing.
+            fill (str): The interior color of the polygon. It suports all the collors from tkinter.
+            tags (list[str]): Tags assigned to the objecto of the canvas.
+            zIndex (float): Its zIndex.
+        """
         return cls.rectangle(TCanvas, center, size, size, angle, fill, tags, zIndex)
 
+    def checkIfPointInside(self, point:np.array)->bool:
+        """Given a point, it checks if the point is inside the local polygon.
+        
+        Args:
+            (array): The local coordinates of the point.
+        Returns:
+            True if the point is inside the local polygon and false otherwise.
+        """
 
+        localPoint = self.TCanvas.reflectedPoint(point)
+        cutsCounter = 0
+        for i in range(len(self.localVertices)):
+            prevPoint = self.localVertices[i-1]
+            nextPoint = self.localVertices[i]
+            if prevPoint[1]>localPoint[1] or nextPoint[1]>localPoint[1]:
+                if (prevPoint[0]-localPoint[0])*(nextPoint[0]-localPoint[0])<0:
+                    cutsCounter = cutsCounter +1
+        if cutsCounter%2==1:
+            return True
+
+        return False
 
 
     # Useless function right now
@@ -248,33 +312,17 @@ class topologicalPolygon(topologicalObject):
             points = newPoints
         self.localBoundry = points
 
-    def checkIfPointInside(self, point:np.array)->bool:
-        """Given a point, it checks if the point is inside the polygon.
-        
-        Args:
-            (array): The coordinates of the point.
-        Returns:
-            True if the point is inside the polygon and false otherwise.
-        """
-
-        localPoint = self.TCanvas.reflectedPoint(point)
-        cutsCounter = 0
-        for i in range(len(self.localVertices)):
-            prevPoint = self.localVertices[i-1]
-            nextPoint = self.localVertices[i]
-            if prevPoint[1]>localPoint[1] or nextPoint[1]>localPoint[1]:
-                if (prevPoint[0]-localPoint[0])*(nextPoint[0]-localPoint[0])<0:
-                    cutsCounter = cutsCounter +1
-        if cutsCounter%2==1:
-            return True
-
-        return False
-
 
 
 
 class topologicalThickCurve(topologicalPolygon):
-    """It represents a thick curve on the topological canvas."""
+    """It represents a thick curve on the topological canvas.
+    Atributes:
+        center (list[array]): A list of local points of the center line.
+        amplitudes (list[float]): A list of the amplitude of the curve with respect to the correspoinding center point.
+        offset1 (list[array]): A list of one of the offsets of the curve.
+        offset2 (list[array]): A list of the other of the offsets of the curve.
+    """
     def __init__(self, TCanvas:topologicalCanvas, points:list[np.array], amplitude: list[float], fill: str="black", zIndex = 0, tags: list[str] = []):
         """
         It generates the thick line.
@@ -283,7 +331,10 @@ class topologicalThickCurve(topologicalPolygon):
             TCanvas (topologicalCanvas): The topological canvas where the thick curve will be drown.
             points (list[array]): The list of points conforming the original curve.
             amplitude: list[float]: The amplitud of the curve at each point.
-            fill (str): The collor of the curve.
+            fill (str): The interior color of the curve. It suports all the collors from tkinter.
+            tags (list[str]): Tags assigned to the objecto of the canvas.
+            zIndex (float): Its zIndex.
+            
         """
         self.nPoints = len(points)
         
@@ -299,18 +350,17 @@ class topologicalThickCurve(topologicalPolygon):
         self.TCanvas = TCanvas
         self.color = fill
         
-        ofsets = self.createOffset()
+        ofsets = self._createOffset()
         self.ofset1 = ofsets[0]
         self.ofset2 = ofsets[1]
 
-        self.interior = []
         vertices = self.ofset1 + self.ofset2[::-1]
         
         super().__init__(TCanvas, vertices, fill,tags, zIndex=zIndex)
     
 
-    def createOffset(self):
-        """Given a curve, creates an offset to each side"""
+    def _createOffset(self):
+        """Given a curve (list of point), creates an offset to each side."""
         curve = self.center
         amplitudes = self.amplitudes
         ofset1 = []
@@ -324,6 +374,7 @@ class topologicalThickCurve(topologicalPolygon):
         return [ofset1,ofset2]
     
     def getStart(self)->np.array:
+        """Returns the start of the curve, precisely it returns the first point of each ofset"""
         return np.array([self.ofset1[0], self.ofset2[0]])
 
 

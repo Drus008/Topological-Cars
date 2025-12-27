@@ -2,7 +2,8 @@ import tkinter as tk
 from tkinter import ttk
 import time
 
-#Made by AI
+#Made by AI just to have it.
+# TODO It has to be ramade entierly
 
 class InputView(ttk.Frame):
     """

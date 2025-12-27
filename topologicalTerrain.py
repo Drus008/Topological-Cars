@@ -45,9 +45,28 @@ class terrainManager:
         Args:
             point (array): The coordinates of the point.
         Returns:
-            A list wit format [friction, grip].
+            A list with format [friction, grip].
         """
         for terrain in self.terrains:
             if terrain.checkIfPointInside(point):
                 return terrain.friction, terrain.grip
         return 10, 10
+
+
+def topologicalPseudoCircle(TCanvas:topologicalCanvas)->terrainManager:
+    """Retuns the pseudocircle map"""
+    x = TCanvas.dimX
+    y = TCanvas.dimY
+    thickness = 50
+    radius = 1/2
+    precision = 100
+
+    halfCircle1 = [radius*np.array([x*np.sin(np.pi*alfa/((precision)*2-4)),y*np.cos(np.pi*alfa/((precision)*2-4))]) for alfa in range(precision)]
+    halfCircle2 = [np.array([x,y])-point for point in halfCircle1]
+    road1 = topologicalThickCurve(TCanvas, halfCircle1, [thickness])
+    road2 =topologicalThickCurve(TCanvas, halfCircle2, [thickness])
+
+    terrain = terrainManager(TCanvas)
+    terrain.addTerrain(road1, 10, 10)
+    terrain.addTerrain(road2, 10, 10)
+    return terrain

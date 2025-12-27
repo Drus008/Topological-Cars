@@ -10,6 +10,18 @@ class topologicalCanvas():
     """
     Canvas with the sides glued.
 
+    To get that efetc a big canvas is created and divided in to a matrix of 6x6 cells.
+    The 2x2 cells of the center are the principal cels, where the action is supoused to happen.
+    The other ones are there just to produce visual coherence.
+
+    When we talk about a local propiety we are talking about the propiety of the object on the first cell (0,0).
+
+    When we talk about a global propiety we are talking about the propiety of the object on the centrall cells (relative to them).
+
+    When we talk about a normal propiety we are talking about the propiety of the object on the original canvas.
+
+
+
     Attributes:
         canvas (tkinter.Canvas): The canvas used to model de topological space.
         hOrientation (sign): The relation between the orientation of the left and bottom right.
@@ -113,14 +125,14 @@ class topologicalCanvas():
 
     def topologicalPoint(self, x: float, y: float)->np.array:
         """
-        Given the coordinates of a point, returns the coordenates of each copy of the point in the topological canvas.
+        Given the local coordinates of a point, returns the normal coordenates of the point on each cell.
         
         Args:
-            x (float): the x coordenate of the point.
-            y (float): tht y coordenate of the point.
+            x (float): the x local coordenate of the point.
+            y (float): tht y local coordenate of the point.
 
         Returns:
-            A matrix where the element i,j are the cordinates of point on the i,j copy of the canvas.
+            A matrix where the element i,j are the normal cordinates of point on the i,j cell.
         """
         pointsMatrix = np.zeros((6,6,2))
         """ TODO It would be better if loc was calculated twice and placed on the corresponding indexes insted of calculating them every time """
@@ -149,7 +161,7 @@ class topologicalCanvas():
         self.lastTime = newTime
     
     def getCamaraPosition(self)->np.array:
-        """Retuns the position of the camara on the local canvas"""
+        """Retuns the global position of the camara on the canvas"""
         fraccionx = self.canvas.xview()[0]
         fracciony = self.canvas.yview()[0]
 
@@ -158,11 +170,11 @@ class topologicalCanvas():
 
         camarax = camarax - self.dimX*2
         camaray = camaray - self.dimY*2
-
+        print([camarax, camaray])
         return np.array([camarax, camaray])
     
     def setCamaraPosition(self, x:float, y:float)->np.array:
-        """Sets the position of the camara to a specific point"""
+        """Sets the normal position of the camara to a specific global point"""
         camarax = x + self.dimX*2
         camaray = y + self.dimY*2
         fraccionx = (camarax - self.windowX/2)/(6*self.dimX)

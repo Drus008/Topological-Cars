@@ -10,11 +10,12 @@ import json
 
 class topologicalCar():
     """
-    A car that moves within a topological canvas
+    A car that moves within a topological canvas.
 
     Atributes:
         TCanvas (topologicalCanvas): The topological canvas where the car will be placed.
         body (topologicalPolygon): The rectangle that represents the car on the canvas.
+        ground (terrainManager): The terrain on which the car will be move.
         v (array): The velocity vector of the car.
         acc (float): The acceleration of the car.
         angle (float): The angle at which the car is looking.
@@ -30,10 +31,12 @@ class topologicalCar():
 
         Args:
             TCanvas (topologicalCanvas): The topological canvas where the car will be placed.
+            ground (terrainManager): The terrain on which the car will be move.
             x0 (float): The x coordinate where the car is placed.
             y0 (float): The x coordinate where the car is placed.
             height (float): The height of the car.
             width (float): The width of the car.
+            color (str): The color of the car. It suports all the tkinter colors.
             acc (float): The acceleration of the car.
             v0x (float): The initial velocity at x axis.
             v0y (float): The initial velocity at y axis.
@@ -42,9 +45,8 @@ class topologicalCar():
             A topological car.
         """
 
-        self.aeroCoef = 1
-        self.wheight = 1
-        self.wheelGreep = 1
+        #self.aeroCoef = 1
+        #self.wheelGreep = 1
 
         self.TCanvas = TCanvas
         self.body = topologicalPolygon(TCanvas, [np.array([x0-width/2,y0-height/2]), np.array([x0+width/2,y0-height/2]), np.array([x0+width/2,y0+height/2]), np.array([x0-width/2,y0+height/2])], fill=color, tags=["topologicalCar"])
@@ -58,46 +60,38 @@ class topologicalCar():
 
         self.width = width
         self.height = height
-
-        self.following = True
-        self.vars = {"v" : StringVar(value=""),"Position" : StringVar(value=""), "angle" : StringVar(value=""),"Grip reduction" : StringVar(value="")}
-
-        self.trajectory = [] #TODO description
         
     
     def updateCar(self):
         """
         Manages the car updates on each frame. (It has to be called).
         """
-        #self.aplyFriction()
         self.calcAcc()
         self.keyboardManagment()
         self.updatePosition()
         self.centerCamara()
-
-        self.vars["v"].set(str(round(self.v[0],3))+" "+str(round(self.v[1],3))) 
-        self.vars["Position"].set(str(self.body.position)) 
-        self.vars["angle"].set(str(self.angle)) 
+    
+    def getPosition(self)->np.array:
+        """Returns the position of the car."""
+        return self.body.position
     
     def centerCamara(self):
         """Centers de camara on the car."""
-        self.TCanvas.setCamaraPosition(self.body.position[0], self.body.position[1])
+        self.TCanvas.setCamaraPosition(*self.getPosition())
 
     def updatePosition(self):
         """
-        Updates the car's topological position based on his speed.
+        Updates the car's global position based on his speed.
         """
 
         delta = self.TCanvas.delta
 
-        dx =self.v[0]*delta
-        dy = self.v[1]*delta
-        self.body.TMove(dx,dy)
+        displacement =self.v*delta
+        self.body.TMove(*displacement)
     
 
     def calcAcc(self):
-        """Computes the acceleration of the car and updates its speed."""
-
+        """Computes the acceleration of the car (based on terrain, friction, power...) and updates its speed."""
 
         power = 0
         if self.TCanvas.keyStates["w"]:
@@ -125,7 +119,7 @@ class topologicalCar():
         Rotates the car to the desired direction.
 
         Args:
-            sign (sign): The direction of the rotation. Positive clockwise and negative counterclockwise.
+            sign (sign): The direction of the rotation. Positive means clockwise and negative counterclockwise.
         Returns:
             A topological car.
         """
@@ -150,17 +144,4 @@ class topologicalCar():
         if self.TCanvas.keyStates["d"]:
             self.rotateCar(-1)
 
-    def updateTrajectory(self):
-        if len(self.trajectory)==0:
-            time = 0
-        else:
-            time = self.trajectory[-1]["t"]+self.TCanvas.delta
-        self.trajectory.append({"x":self.body.position[0],
-                                "y":self.body.position[1],
-                                "angle": self.angle,
-                                "t":time})
 
-    def save(self, map:str, player:str):
-        trajectoryFile = {"map": map, "player": player, "trajectory":self.trajectory}
-        with open(map+player+".json", "w") as f:
-            json.dump(trajectoryFile, f, indent=2)

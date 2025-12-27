@@ -1,51 +1,59 @@
 from topologicalTerrain import *
 from topologicalCar import topologicalCar
-from topologicalCanvas import torus, KleinBottleV, projectivePlane
+from topologicalCanvas import torus, KleinBottleV, projectivePlane, topologicalCanvas
 from tkinter import Tk
 from chronometer import finishLine
 
 
-
-def topologicalPseudoCircle(TCanvas:topologicalCanvas):
-    x = TCanvas.dimX
-    y = TCanvas.dimY
-    thickness = 50
-    radius = 1/2
-    precision = 100
-
-    halfCircle1 = [radius*np.array([x*np.sin(np.pi*alfa/((precision)*2-4)),y*np.cos(np.pi*alfa/((precision)*2-4))]) for alfa in range(precision)]
-    halfCircle2 = [np.array([x,y])-point for point in halfCircle1]
-    road1 = topologicalThickCurve(TCanvas, halfCircle1, [thickness])
-    road2 =topologicalThickCurve(TCanvas, halfCircle2, [thickness])
-
-    terrain = terrainManager(TCanvas)
-    terrain.addTerrain(road1, 10, 10)
-    terrain.addTerrain(road2, 10, 10)
-    return terrain
-
 def selectMap(TCanvas: topologicalCanvas, map:str)->terrainManager:
+    """Returns the desired map.
+    
+    Args:
+        TCanvas (topologicalCanvas): The topological canvas.
+        map (str): The map that will be returned.
+    Returns:
+        The selectedMap
+    """
     if map=="Pseudo-Circle":
         return topologicalPseudoCircle(TCanvas)
 
+def selectSpace(interface:Tk, space:str, SIZE:float, visualHelp:bool =False)->topologicalCanvas:
+    """Returns a topological space.
+    Args:
+        interface (Tk): The base parent.
+        space (str). The name of the space. Options: "torus", "klein", "projective".
+        SIZE (float): The size of the space.
+        visualHelp (bool): If true it draws visual clues to help the player navegate.
+    """
+    windowSize = SIZE*1
+    if space=="torus":
+        Topos = torus(interface, dimX= SIZE, dimY= SIZE, windowH=windowSize, windowW=windowSize, visualHelp= visualHelp)
+    elif space=="klein":
+        Topos = KleinBottleV(interface, dimX= SIZE, dimY= SIZE, windowH=windowSize, windowW=windowSize, visualHelp= visualHelp)
+    elif space=="projective":
+        Topos = projectivePlane(interface, dimX= SIZE, dimY= SIZE, windowH=windowSize, windowW=windowSize, visualHelp= visualHelp)
+    return Topos
 
 def configureGame(interface:Tk, space: str, map:str):
+    """Starts a race on the desired map and space.
+    Args:
+        interface (Tk): The parent class.
+        space (str): The name of the space. Options: "torus", "klein", "projective".
+        map (str): The name of the map. Options: "Pseudo-Circle".
+    """
     SIZE = 300
 
-    if space=="torus":
-        Topos = torus(interface, dimX= SIZE, dimY= SIZE, windowH=SIZE, windowW=SIZE, visualHelp= False)
-    elif space=="klein":
-        Topos = KleinBottleV(interface, dimX= SIZE, dimY= SIZE, windowH=SIZE, windowW=SIZE, visualHelp= False)
-    elif space=="projective":
-        Topos = projectivePlane(interface, dimX= SIZE, dimY= SIZE, windowH=SIZE, windowW=SIZE, visualHelp= False)
-    
+    Topos = selectSpace(interface, space, SIZE)
     terrain = selectMap(Topos, map)
     
     car = topologicalCar(Topos, x0=20, y0=20, height=20, width=10, ground=terrain, acc=8, v0x=0, v0y=0)
 
-    finishLine(terrain.terrains[0])
+    timer = finishLine(terrain.terrains[0], car)
 
     while(True):
+        print(Topos.getCamaraPosition())
         car.TCanvas.updateDelta()
         car.updateCar()
+        timer.update()
         Topos.canvas.update()
         
