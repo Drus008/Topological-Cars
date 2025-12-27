@@ -8,28 +8,27 @@ import json
 
 class finishLine():
     """A class that manages all the race-like features.
-    Atributes:
+    Attributes:
         TCanvas (topologicalCanvas): The topological canvas where the finishLine will live.
         car (topologicalCar): The car that will be racing.
-        size (float): The heigth of the finish line.
+        size (float): The height of the finish line.
         interface (Label): The label where the time will be shown. #TODO this has to be done apart.
-        TOTAL_LAPS (int): The total number of laps that has to be done to finish the race.
+        TOTAL_LAPS (int): The total number of laps that have to be completed to finish the race.
         laps (int): The number of laps done by the car.
-        active (bool): Represents if the finish line is active, i.e. if the car crosses the line it counts as a laps. This atribute is ment to prevent that corossing the finish line and going backwards counts as one lap.
-        counting (bool): Represents if the timer is counting,
-        startTime (float): Is the time when the race began (the car corossed the line for the first time).
-        time (float): The time past from the begin of the race.
+        active (bool): Represents if the finish line is active, i.e. if the car crosses the line it counts as a lap. This attribute is meant to prevent crossing the finish line and going backwards from counting as one lap.
+        counting (bool): Represents if the timer is counting.
+        startTime (float): The time when the race began (the car crossed the line for the first time).
+        time (float): The time passed from the beginning of the race.
         newTrajectory (list[dict]): The record of the trajectory of the car once it starts the race.
-        self.rival (rival): The replay of the loaded rival.
-
+        rival (rival): The replay of the loaded rival.
      """
 
     def __init__(self, curve:topologicalThickCurve, car: topologicalCar, size = 20):
-        """Crates the finish line.
+        """Creates the finish line.
         Args:
             curve (topologicalThickCurve): The curve where the finish line will be placed (at the start).
             car (topologicalCar): The car that will be recorded.
-            size (float): The height of th finish line. 
+            size (float): The height of the finish line. 
         """
 
         self.TCanvas = curve.TCanvas
@@ -87,7 +86,7 @@ class finishLine():
                 topologicalPolygon.square(self.TCanvas,squarePosition,squareSide,angle, fill=color)
     
     def checkLaps(self):
-        """Chcks if the has has complited a lap and keeps track of how many has completed."""
+        """Checks if the car has completed a lap and keeps track of how many laps have been completed."""
         position = self.car.body.position
 
         if self.active:
@@ -99,7 +98,7 @@ class finishLine():
                     self.rival.start()
                 elif self.laps==self.TOTAL_LAPS:
                     print("RACE FINISHED", self.time)
-                    self.saveRecord("1", "1") # TODO This has to be done later on, cuz here it lags
+                    self.saveRecord("1", "1") # TODO This has to be done later on, because here it lags
                     self.active=False
                     self.counting = False
                     self.rival.stop()
@@ -127,7 +126,7 @@ class finishLine():
                                 "t":self.time})
 
     def update(self):
-        """Updates all the necesary thing"""
+        """Updates all the necessary things."""
         if self.counting:
             self.time = time() - self.startTime
         self.rival.update()
@@ -144,15 +143,15 @@ class finishLine():
 
 class rival(topologicalPolygon):
     """Emulates a car following a given trajectory.
-    Atrubutes:
+    Attributes:
         timer (finishLine): The finishLine that manages the records.
-        trajectory (list[dict]): A list of times, position and angle of the car.
+        trajectory (list[dict]): A list of times, positions and angles of the car.
         step (int): The index of the trajectory list that the clone is at right now.
     """
 
     @classmethod
     def cloneCar(cls, car:topologicalCar, timer:finishLine):
-        """Clones a given car ang sets it up to race."""
+        """Clones a given car and sets it up to race."""
 
         rival = super().rectangle(car.TCanvas, car.body.position, car.height, car.width, timer.angle, fill="red")
         rival.timer = timer
@@ -173,12 +172,12 @@ class rival(topologicalPolygon):
         self.hide()
 
     def loadRecord(self, name: str):
-        """Loads a record of a previous race in to the clone."""
+        """Loads a record of a previous race into the clone."""
         with open(name+'.json', 'r', encoding='utf-8') as f:
             self.record = json.load(f)["trajectory"]
 
     def update(self):
-        """Updates the clone's position and angle based on the time elapsed an the loaded trajectory."""
+        """Updates the clone's position and angle based on the time elapsed and the loaded trajectory."""
         if self.timer.counting:
             for t in range(self.step,len(self.record)):
                 if self.record[t]["t"]>self.timer.time:

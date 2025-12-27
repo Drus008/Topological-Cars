@@ -13,7 +13,7 @@ def selectMap(TCanvas: topologicalCanvas, map:str)->terrainManager:
         TCanvas (topologicalCanvas): The topological canvas.
         map (str): The map that will be returned.
     Returns:
-        The selectedMap
+        The selected map.
     """
     if map=="Pseudo-Circle":
         return topologicalPseudoCircle(TCanvas)
@@ -22,9 +22,9 @@ def selectSpace(interface:Tk, space:str, SIZE:float, visualHelp:bool =False)->to
     """Returns a topological space.
     Args:
         interface (Tk): The base parent.
-        space (str). The name of the space. Options: "torus", "klein", "projective".
+        space (str): The name of the space. Options: "torus", "klein", "projective".
         SIZE (float): The size of the space.
-        visualHelp (bool): If true it draws visual clues to help the player navegate.
+        visualHelp (bool): If true it draws visual clues to help the player navigate.
     """
     windowSize = SIZE*1
     if space=="torus":
@@ -61,4 +61,3 @@ def configureGame(interface:Tk, space: str, map:str):
         car.updateCar()
         timer.update()
         Topos.canvas.update()
-        

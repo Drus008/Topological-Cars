@@ -7,21 +7,21 @@ class topologicalObject:
     """
     An object on the topological canvas.
     
-    By topological object I refear to an object that is duplicated on every individual space with its respective orientation.
+    By topological object I refer to an object that is duplicated on every individual space with its respective orientation.
     
     Attributes:
-        TCanvas (topologicalCanvas): The topological canvas where the point will be drwan.
+        TCanvas (topologicalCanvas): The topological canvas where the point will be drawn.
         Tid (str): The id of the element on the topological canvas. It is a string with the format "Tid"+int.
         position (array): The position where the object will be placed.
         objects (List[List[int]]): A matrix where the i,j element is the id of the copy of the original object placed at the canvas i,j.
-        zIndex: Used to manage som deepth related aspects.
+        zIndex: Used to manage some depth related aspects.
     """
     def __init__(self, instances:list[list[int]], Tid, canvas: topologicalCanvas, x0=0, y0=0, zIndex = 0):
         """
-        Creates a object on the topological space.
+        Creates an object on the topological space.
 
         Args:
-            instances (list[list[int]]): The original id (tkinter) of the element drawed on each local canvas.
+            instances (list[list[int]]): The original id (tkinter) of the element drawn on each local canvas.
             Tid: The topological ID of the object.
             canvas (topologicalCanvas): The topological canvas where the object will live.
         """
@@ -53,7 +53,7 @@ class topologicalObject:
 
     def checkBounds(self)->None:
         """
-        Chech if the object is out of its global position and moves it back to its corresponding global space if needed otherwise.
+        Check if the object is out of its global position and moves it back to its corresponding global space if needed otherwise.
         """
         x = self.position[0]
         if x<0:
@@ -69,23 +69,23 @@ class topologicalObject:
 
     def TMove(self, dx:float, dy:float)->None:
         """
-        Moves all the copies the object and teleports it to its global canvas if it moves out of it.
+        Moves all the copies of the object and teleports it to its global canvas if it moves out of it.
 
         Args:
             dx (float): the displacement on the x direction.
-            dy (float): the displacement on the x direction.
+            dy (float): the displacement on the y direction.
         """
         self.move(dx, dy)
         self.checkBounds()
 
         
-    def hide(self):
+    def hide(self)->None:
         """Makes the object invisible"""
         for r in range(6):
             for c in range(6):
                 self.TCanvas.canvas.itemconfig(self.objects[r][c], state = "hidden")
     
-    def unhide(self):
+    def unhide(self)->None:
         """Makes the object visible"""
         for r in range(6):
             for c in range(6):
@@ -107,7 +107,7 @@ class topologicalLine(topologicalObject):
             TCanvas (topologicalCanvas): The topological canvas where the line will live.
             pInitial (np.array): The initial point of the line on the original space.
             pFinal (np.array): The final point of the line on the original space.
-            tags (list[str]): Tags assigned to the objecto of the canvas.
+            tags (list[str]): Tags assigned to the object of the canvas.
 
         Returns:
             The topological ID of the line.
@@ -133,9 +133,9 @@ class topologicalPolygon(topologicalObject):
     """
     Represents a polygon on a topological canvas.
 
-    Atributes:
+    Attributes:
         color (str): The color of the interior of the polygon.
-        localVerices (list[array]): A list of the local coordinates of the vertices of the polygon.
+        localVertices (list[array]): A list of the local coordinates of the vertices of the polygon.
 
     """
     def __init__(self, TCanvas:topologicalCanvas, pointList: list[np.array], fill:str="black", tags = [], zIndex = 0)-> int:
@@ -144,9 +144,9 @@ class topologicalPolygon(topologicalObject):
 
         Args:
             TCanvas (topologicalCanvas): The topological canvas where the line will live.
-            pointList (list[np.array]): A list of 2D arrays that represents the coodinates of edges of the polygon
-            fill (str): The interior color of the polygon. It suports all the collors from tkinter.
-            tags (list[str]): Tags assigned to the objecto of the canvas.
+            pointList (list[np.array]): A list of 2D arrays that represents the coordinates of edges of the polygon
+            fill (str): The interior color of the polygon. It supports all the colors from tkinter.
+            tags (list[str]): Tags assigned to the object of the canvas.
             zIndex (float): Its zIndex.
 
         Returns:
@@ -223,12 +223,12 @@ class topologicalPolygon(topologicalObject):
 
         Args:
             TCanvas (topologicalCanvas): The topological canvas where the rectangle will be drawn.
-            Center (array): The center of the recangle.
-            hight (float): The hight of the rectangle.
+            center (array): The center of the rectangle.
+            hight (float): The height of the rectangle.
             width (float): The width of the rectangle.
             angle (float): The angle that the rectangle will be facing.
-            fill (str): The interior color of the polygon. It suports all the collors from tkinter.
-            tags (list[str]): Tags assigned to the objecto of the canvas.
+            fill (str): The interior color of the polygon. It supports all the colors from tkinter.
+            tags (list[str]): Tags assigned to the object of the canvas.
             zIndex (float): Its zIndex.
         """
         vector1 = direcrion2D(angle)
@@ -247,11 +247,11 @@ class topologicalPolygon(topologicalObject):
 
         Args:
             TCanvas (topologicalCanvas): The topological canvas where the rectangle will be drawn.
-            Center (array): The center of the recangle.
+            center (array): The center of the rectangle.
             size (float): The size of each side of the square.
             angle (float): The angle that the rectangle will be facing.
-            fill (str): The interior color of the polygon. It suports all the collors from tkinter.
-            tags (list[str]): Tags assigned to the objecto of the canvas.
+            fill (str): The interior color of the polygon. It supports all the colors from tkinter.
+            tags (list[str]): Tags assigned to the object of the canvas.
             zIndex (float): Its zIndex.
         """
         return cls.rectangle(TCanvas, center, size, size, angle, fill, tags, zIndex)
@@ -260,7 +260,7 @@ class topologicalPolygon(topologicalObject):
         """Given a point, it checks if the point is inside the local polygon.
         
         Args:
-            (array): The local coordinates of the point.
+            point (np.array): The local coordinates of the point.
         Returns:
             True if the point is inside the local polygon and false otherwise.
         """
@@ -281,7 +281,7 @@ class topologicalPolygon(topologicalObject):
 
     # Useless function right now
     def createLocalBoundry(self, vertices: list[np.array]):
-        """(Unused function)Creates a list of points that forms the boundry of the polygon."""
+        """(Unused function)Creates a list of points that forms the boundary of the polygon."""
         PRECISION = 1
         
         numbPoints = len(vertices)
@@ -316,9 +316,9 @@ class topologicalPolygon(topologicalObject):
 
 class topologicalThickCurve(topologicalPolygon):
     """It represents a thick curve on the topological canvas.
-    Atributes:
+    Attributes:
         center (list[array]): A list of local points of the center line.
-        amplitudes (list[float]): A list of the amplitude of the curve with respect to the correspoinding center point.
+        amplitudes (list[float]): A list of the amplitude of the curve with respect to the corresponding center point.
         offset1 (list[array]): A list of one of the offsets of the curve.
         offset2 (list[array]): A list of the other of the offsets of the curve.
     """
@@ -327,11 +327,11 @@ class topologicalThickCurve(topologicalPolygon):
         It generates the thick line.
         
         Args:
-            TCanvas (topologicalCanvas): The topological canvas where the thick curve will be drown.
+            TCanvas (topologicalCanvas): The topological canvas where the thick curve will be drawn.
             points (list[array]): The list of points conforming the original curve.
-            amplitude: list[float]: The amplitud of the curve at each point.
-            fill (str): The interior color of the curve. It suports all the collors from tkinter.
-            tags (list[str]): Tags assigned to the objecto of the canvas.
+            amplitude: list[float]: The amplitude of the curve at each point.
+            fill (str): The interior color of the curve. It supports all the colors from tkinter.
+            tags (list[str]): Tags assigned to the object of the canvas.
             zIndex (float): Its zIndex.
             
         """
@@ -349,59 +349,57 @@ class topologicalThickCurve(topologicalPolygon):
         self.TCanvas = TCanvas
         self.color = fill
         
-        ofsets = self._createOffset()
-        self.ofset1 = ofsets[0]
-        self.ofset2 = ofsets[1]
+        offsets = self._createOffset()
+        self.offset1 = offsets[0]
+        self.offset2 = offsets[1]
 
-        vertices = self.ofset1 + self.ofset2[::-1]
+        vertices = self.offset1 + self.offset2[::-1]
         
         super().__init__(TCanvas, vertices, fill,tags, zIndex=zIndex)
     
 
-    def _createOffset(self):
-        """Given a curve (list of point), creates an offset to each side."""
+    def _createOffset(self)->None:
+        """Given a curve (list of points), creates an offset to each side."""
         curve = self.center
         amplitudes = self.amplitudes
-        ofset1 = []
-        ofset2 = []
+        offset1 = []
+        offset2 = []
         for i in range(len(curve)-1):
             tangent = curve[i+1]-curve[i]
             orto = np.array([-tangent[1], tangent[0]])
             orto = 0.5*amplitudes[i]*orto/np.linalg.norm(orto)
-            ofset1.append(curve[i]+orto)
-            ofset2.append(curve[i]-orto)
-        return [ofset1,ofset2]
+            offset1.append(curve[i]+orto)
+            offset2.append(curve[i]-orto)
+        return [offset1,offset2]
     
     def getStart(self)->np.array:
-        """Returns the start of the curve, precisely it returns the first point of each ofset"""
-        return np.array([self.ofset1[0], self.ofset2[0]])
+        """Returns the start of the curve, precisely it returns the first point of each offset"""
+        return np.array([self.offset1[0], self.offset2[0]])
 
 
-# Usless class.
+# Useless class.
 class objectsManager():
     def __init__(self, TCanvas: topologicalCanvas, objects: list[topologicalObject]):
 
         for obj in objects:
             if TCanvas!=obj.TCanvas:
-                self.errorHandeler("canvasIncompatibility")
+                self.errorHandler("canvasIncompatibility")
 
         self.objects = objects.copy()
         self.TCanvas = TCanvas
     
     def addObject(self, obj: topologicalObject):
         if obj.TCanvas!=self.TCanvas:
-            self.errorHandeler("canvasIncompatibility")
+            self.errorHandler("canvasIncompatibility")
         self.objects.append(obj)
 
-    def addObjects(self, objects: list[topologicalObject]):
+    def addObjects(self, objects: list[topologicalObject])->None:
         for obj in objects:
             if obj.TCanvas!=self.TCanvas:
-                self.errorHandeler("canvasIncompatibility")
+                self.errorHandler("canvasIncompatibility")
             self.objects.append(obj)
     
 
-    def errorHandeler(self, error:str):
+    def errorHandler(self, error:str)->None:
         if error=="canvasIncompatibility":
-            raise ValueError("Error found when adding object due to canvas incomatibility")
-
-
+            raise ValueError("Error found when adding object due to canvas incompatibility")

@@ -3,44 +3,42 @@ from topologicalCanvas import topologicalCanvas
 from topologicalTerrain import terrainManager
 from numpy import pi
 import numpy as np
-from tkinter import StringVar
 from Tmath import direcrion2D
 
-import json
 
 class topologicalCar():
     """
     A car that moves within a topological canvas.
 
-    Atributes:
+    Attributes:
         TCanvas (topologicalCanvas): The topological canvas where the car will be placed.
         body (topologicalPolygon): The rectangle that represents the car on the canvas.
-        ground (terrainManager): The terrain on which the car will be move.
+        ground (terrainManager): The terrain on which the car will move.
         v (array): The velocity vector of the car.
         acc (float): The acceleration of the car.
         angle (float): The angle at which the car is looking.
         width (float): The width of the car.
         height (float): The height of the car.
-        angVel (float): The speed at wich the car turns.
+        angVel (float): The speed at which the car turns.
     """
 
     def __init__(self, TCanvas: topologicalCanvas, ground:terrainManager, x0:float, y0:float, height:float, width:float, color="blue", acc=1, v0x = 0, v0y=0,rotationSpeed = 1):
         
         """
-        Initializes the car given tha basic parameters.
+        Initializes the car given the basic parameters.
 
         Args:
             TCanvas (topologicalCanvas): The topological canvas where the car will be placed.
-            ground (terrainManager): The terrain on which the car will be move.
+            ground (terrainManager): The terrain on which the car will move.
             x0 (float): The x coordinate where the car is placed.
-            y0 (float): The x coordinate where the car is placed.
+            y0 (float): The y coordinate where the car is placed.
             height (float): The height of the car.
             width (float): The width of the car.
-            color (str): The color of the car. It suports all the tkinter colors.
+            color (str): The color of the car. It supports all the tkinter colors.
             acc (float): The acceleration of the car.
-            v0x (float): The initial velocity at x axis.
-            v0y (float): The initial velocity at y axis.
-            rotationSpeed (float): The speed at wich the car turns.
+            v0x (float): The initial velocity on the x-axis.
+            v0y (float): The initial velocity on the y-axis.
+            rotationSpeed (float): The speed at which the car turns.
         Returns:
             A topological car.
         """
@@ -62,7 +60,7 @@ class topologicalCar():
         self.height = height
         
     
-    def updateCar(self):
+    def updateCar(self)->None:
         """
         Manages the car updates on each frame. (It has to be called).
         """
@@ -75,13 +73,13 @@ class topologicalCar():
         """Returns the position of the car."""
         return self.body.position
     
-    def centerCamara(self):
-        """Centers de camara on the car."""
+    def centerCamara(self)->None:
+        """Centers the camera on the car."""
         self.TCanvas.setCamaraPosition(*self.getPosition())
 
-    def updatePosition(self):
+    def updatePosition(self)->None:
         """
-        Updates the car's global position based on his speed.
+        Updates the car's global position based on its speed.
         """
 
         delta = self.TCanvas.delta
@@ -90,7 +88,7 @@ class topologicalCar():
         self.body.TMove(*displacement)
     
 
-    def calcAcc(self):
+    def calcAcc(self)->None:
         """Computes the acceleration of the car (based on terrain, friction, power...) and updates its speed."""
 
         power = 0
@@ -114,31 +112,28 @@ class topologicalCar():
         
         self.v = self.v + acc*self.TCanvas.delta
         
-    def rotateCar(self, sign):
+    def rotateCar(self, sign)->None:
         """
         Rotates the car to the desired direction.
 
         Args:
             sign (sign): The direction of the rotation. Positive means clockwise and negative counterclockwise.
-        Returns:
-            A topological car.
         """
         orientation = -sign
 
         if np.dot(self.v,direcrion2D(self.angle))<0:
             orientation = -orientation
         delta = self.TCanvas.delta
-                                                    #TODO the 0.1 is complitly arbitrary
+                                                    #TODO the 0.1 is completely arbitrary
         turnCoef = (1-np.exp(-np.linalg.norm(self.v))**.1) #Don't allow the car to turn when its speed is low.
         angle = orientation*delta*self.angVel*turnCoef 
         self.angle = self.angle+angle
         self.body.TRotation(angle)
 
-    def keyboardManagment(self):
+    def keyboardManagment(self)->None:
         """
-        Manages how the car interacts with the keyboard imputs.
+        Manages how the car interacts with the keyboard inputs.
         """
-        
         if self.TCanvas.keyStates["a"]:
             self.rotateCar(1)
         if self.TCanvas.keyStates["d"]:

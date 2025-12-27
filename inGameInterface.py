@@ -1,19 +1,22 @@
 from tkinter import Tk, Label, Frame
 
-import tkinter as tk
-
-from math import log10
-from time import sleep
-
-#2C2825
 
 BGCOLOR = "#1E1C1A"
 BGCOLOR_PAD = "#2C2825"
 COLOR_CHARS = "white"
 COLOR_PAD_OFF = "#564E48"
 
-class character():
-
+class charPanel():
+    """A widget that shows a panel with a char.
+    Atributes:
+        parent: The tkInter parent.
+        bg (str): The background color of the panel.
+        color (str): The font color.
+        offColor (str): The panel color when its off.
+        character (str): The character beeing show on the panel.
+        frame (Frame): The frame that contains the character.
+        label (Label): The tkInter label with the character.
+    """
     def __init__(self,frame, char:str=""):
         self.parent = frame
         self.bg = BGCOLOR_PAD
@@ -26,43 +29,71 @@ class character():
         self.label = Label(self.frame, text=self.character, bg=self.bg, fg=self.color, font=("Digital-7", 55, "bold"))
         self.label.pack(expand=True, fill="both")
         
-    def hide(self):
+    def hide(self)->None:
+        """Hides the character."""
         self.label.configure(bg=self.offColor, text="")
 
-    def reveal(self):
+    def reveal(self)->None:
+        """Reveals the character."""
         self.label.configure(bg=self.bg, text=self.character)
 
-    def changeCharacter(self, char: str):
+    def changeCharacter(self, char: str)->None:
+        """Changes the character on the panel.
+        Args:
+            char (str): The character that will be placed on the panel."""
         self.label.configure(text=char)
     
 
-class stringFlip():
+class charPanelColection():
+    """A widget that displays a colection of charPanels.
+    Atributes:
+        parent: The tkInter parent.
+        frame: The frame that contains the charPanels.
+        nCars (int): The number of chars in the colection.
+        charLabelsList (list[charPanel]): A list with the charPanles.
+    """
     def __init__(self, parent, nChars: int, string: str):
-        
         self.parent = parent
         self.frame = Frame(parent, bg=BGCOLOR)
         self.frame.grid_rowconfigure(0, weight=1)
         self.nChars = nChars
-        self.charLabels: list[character] = []
+        self.charLabelsList: list[charPanel] = []
         for digit in range(nChars):
-            newChar = character(self.frame, "A")
+            newChar = charPanel(self.frame, "A")
             newChar.frame.grid(row=0,column=digit,sticky="nsew", padx=2)
-            self.charLabels.append(newChar)
+            self.charLabelsList.append(newChar)
         self.updateWord(string)
 
-    def updateWord(self, word:str):
+    def updateWord(self, word:str)->None:
+        """Updates the word shown on the panels.
 
+        If the word is larger than the panel it shows the last words.
+
+        Args:
+            word (str): The word that will be shown.
+        """
         for i in range(1,self.nChars+1):
-            if self.charLabels[-i].character!= word[-i]:
-                self.charLabels[-i].changeCharacter(word[-i])
+            if self.charLabelsList[-i].character!= word[-i]:
+                self.charLabelsList[-i].changeCharacter(word[-i])
 
-class counter(stringFlip):
+class counterPanel(charPanelColection):
+    """A charPanelColection intended to display numbers.
+
+    It shows 0s on the empty chars.
+
+    Atributes:
+        number (int): The number shown.
+    """
     def __init__(self, parent, digits: int, number: int):
         self.number = number
 
         super().__init__(parent, digits, digits*"0"+str(number))
 
-    def updateNumber(self, num:int):
+    
+    def updateNumber(self, num:int)->None:
+        """Updates the number shown.
+        Args:
+            num (int): The number that will be shown."""
         self.number = int(num)
         strNum = "0"* self.nChars + str(self.number)
         for nDigit in range(1,self.nChars+1):
@@ -71,14 +102,18 @@ class counter(stringFlip):
                 digit = " "+digit
         
         self.updateWord(strNum)
-    
-    def count(self):
-        self.updateNumber(self.number+1)
-        self.frame.after(100, self.count)
 
 
 
 class timeCounter():
+    """A widget to display a minute and a second.
+    Atributes:
+        parent: The tkInter parent.
+        frame (Frame): The frame that contains the panels.
+        time (int): The number of seconds repesented on the panels.
+        minute (counterPanel): the counter panel that displays the minutes (1 digit).
+        sec (counterPanel): The counter panel that displays the seconds (2 digits).
+    """
     def __init__(self, parent):
         self.parent = parent
         self.frame = Frame(parent, bg=BGCOLOR)
@@ -86,16 +121,22 @@ class timeCounter():
 
         self.time = 0
 
-        self.minute = counter(self.frame,1,0)        
+        self.minute = counterPanel(self.frame,1,0)        
         self.minute.frame.grid(row=0,column=0, padx=7, sticky="nsew")
 
-        self.sec = counter(self.frame,2,0)
+        self.sec = counterPanel(self.frame,2,0)
         self.sec.frame.grid(row=0,column=1, padx=7, sticky="nsew")
 
         self.showTime(self.time)
     
-    def showTime(self, time: int):
-        
+    def showTime(self, time: int)->None:
+        """Shows the time on the displays.
+
+        If the time given is grater than 9min 59s then it displays "ERR".
+
+        Args:
+            time (int): The time that will be shown.
+        """
         if time<600:
             seconds = time%60
             minutes = time//60
@@ -107,22 +148,18 @@ class timeCounter():
         self.time = time
         
 
-    def countTime(self):
-        self.showTime(self.time+1)
-        self.frame.after(100, self.countTime)
-
-
-def counterTry(palabra:character, num: int):
-    w = str(num)
-    if num==1:
-        w = " "+w
-    palabra.changeCharacter(w)
-    num = num +1
-    if num<10:
-        palabra.label.after(500, counterTry, palabra, num)
-
 
 class layout():
+    """The main layout that shows the speed, the time, the number of laps and the name of the player.
+    
+    Atributes:
+        baner: The frame that contains the panels.
+        border: The border of the panel.
+        speed (counterPanel): The panel intended to show the speed (3 digits).
+        timer (timeCounter): The panel intended to show the time.
+        laps (counterPanel): The panel intended to show the number of laps (1 digit).
+        name (charPanelColection): The panel intended to show the name of the player (3 letters).
+    """
     def __init__(self, window: Tk, ):
         self.baner = Frame(window, bg=BGCOLOR, height=80)
         self.baner.pack(side="bottom", fill="x")
@@ -131,16 +168,16 @@ class layout():
         self.border.pack(side="bottom", fill="x")
 
 
-        self.speed = counter(self.baner, 3, 23)
+        self.speed = counterPanel(self.baner, 3, 23)
         self.speed.frame.pack(side="left", fill="y", expand=True)
 
         self.timer = timeCounter(self.baner)
         self.timer.frame.pack(side="left",fill="y",expand=True)
 
-        self.laps = counter(self.baner, 1, 0)
+        self.laps = counterPanel(self.baner, 1, 0)
         self.laps.frame.pack(side="left",fill="y",expand=True)
 
-        self.name = stringFlip(self.baner,3, "AAA")
+        self.name = charPanelColection(self.baner,3, "AAA")
         self.name.frame.pack(side="left",fill="y",expand=True)
 
 

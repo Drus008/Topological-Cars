@@ -2,20 +2,20 @@ from tkinter import Event
 
 class keyStateMachine(dict):
     """
-    A dict used as state machine designed to monitor wich keys are pressed
+    A dict used as state machine designed to monitor which keys are pressed.
     
-    Each keybord key has its dictionary key with a boolean asociated: true if the key is beeing presed and false otherwise.
+    Each keyboard key has its dictionary key with a boolean associated: true if the key is being pressed and false otherwise.
     """
     def __init__(self):
         """
-        It creates de state machine.
+        It creates the state machine.
         """
         super().__init__({"w": False, "a":False, "s":False, "d":False})
 
 
     def keyPresed(self, key:Event):
         """
-        Function to activate the key when its pressed
+        Function to activate the key when it is pressed.
         
         Args:
             key (Event): The event of the pressed key.
@@ -26,7 +26,7 @@ class keyStateMachine(dict):
     
     def keyReleased(self, key:Event):
         """
-        Function to activate the key when its released.
+        Function to deactivate the key when it is released.
         
         Args:
             key (Event): The event of the released key.

@@ -1,6 +1,5 @@
 from topologicalCanvas import topologicalCanvas
 from topologicalObjects import topologicalPolygon, topologicalThickCurve
-from Tmath import direcrion2D
 import numpy as np
 
 
@@ -20,14 +19,14 @@ class terrainManager:
         
         Args:
             newTerrain (topologicalPolygon): The shape of the terrain.
-            fiction (float): The friction of the terrain.
+            friction (float): The friction of the terrain.
             grip (float): The grip of the terrain.
         """
         nTerrains = len(self.terrains)
         newTerrain.friction = friction
         newTerrain.grip = grip
-        #IDK what would be the best way to add the parameter friction to this without creating a new class
-        #(creating a new class would be problematic becouse newTerrain can be childs of topologicalPolygon)
+        #I don't know what would be the best way to add the parameter friction to this without creating a new class
+        #(creating a new class would be problematic because newTerrain can be children of topologicalPolygon)
         for iTerrain in range(nTerrains):
             if self.terrains[iTerrain].zIndex<newTerrain.zIndex:
                 self.terrains.insert(iTerrain,newTerrain)
@@ -35,13 +34,13 @@ class terrainManager:
         self.terrains.append(newTerrain)
         
     def detectTerrain(self, point:np.array)->str:
-        """Given a point it returns the TID of the terrain with biggest zIndex that contains the point"""
+        """Given a point, it returns the TID of the terrain with highest zIndex that contains the point"""
         for terrain in self.terrains:
             if terrain.checkIfPointInside(point):
                 return terrain.Tid
     
     def getFriction(self, point:np.array)->list[float]:
-        """Given a point it returns the friction and grip of the terrain with biggest zIndex that contains the point.
+        """Given a point, it returns the friction and grip of the terrain with highest zIndex that contains the point.
         Args:
             point (array): The coordinates of the point.
         Returns:
@@ -54,7 +53,7 @@ class terrainManager:
 
 
 def topologicalPseudoCircle(TCanvas:topologicalCanvas)->terrainManager:
-    """Retuns the pseudocircle map"""
+    """Returns the pseudocircle map"""
     x = TCanvas.dimX
     y = TCanvas.dimY
     thickness = 50
