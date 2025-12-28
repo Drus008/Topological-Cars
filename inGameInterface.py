@@ -51,6 +51,7 @@ class charPanelColection():
         frame: The frame that contains the charPanels.
         nCars (int): The number of chars in the colection.
         charLabelsList (list[charPanel]): A list with the charPanles.
+        word (str): The word shown on the
     """
     def __init__(self, parent, nChars: int, string: str):
         self.parent = parent
@@ -62,16 +63,17 @@ class charPanelColection():
             newChar = charPanel(self.frame, "A")
             newChar.frame.grid(row=0,column=digit,sticky="nsew", padx=2)
             self.charLabelsList.append(newChar)
-        self.updateWord(string)
+        self.string = " "*nChars+ string
+        self.updateWord(self.string)
 
-    def updateWord(self, word:str)->None:
+    def updateWord(self, word: str)->None:
         """Updates the word shown on the panels.
 
-        If the word is larger than the panel it shows the last words.
+        If the word is larger than the panel it shows the last characters.
+        If the word is smaller than the panel it shows the word at the left and fills the remanig characters with spaces.
 
-        Args:
-            word (str): The word that will be shown.
         """
+        self.string = " "*self.nChars+ word
         for i in range(1,self.nChars+1):
             if self.charLabelsList[-i].character!= word[-i]:
                 self.charLabelsList[-i].changeCharacter(word[-i])
@@ -98,10 +100,9 @@ class counterPanel(charPanelColection):
         strNum = "0"* self.nChars + str(self.number)
         for nDigit in range(1,self.nChars+1):
             digit = strNum[-nDigit]
-            if digit==1:
+            if digit=="1":
                 digit = " "+digit
-        
-        self.updateWord(strNum)
+            self.charLabelsList[-nDigit].changeCharacter(digit)
 
 
 
@@ -160,7 +161,7 @@ class layout():
         laps (counterPanel): The panel intended to show the number of laps (1 digit).
         name (charPanelColection): The panel intended to show the name of the player (3 letters).
     """
-    def __init__(self, window: Tk, ):
+    def __init__(self, window: Tk, playerName: str):
         self.baner = Frame(window, bg=BGCOLOR, height=80)
         self.baner.pack(side="bottom", fill="x")
         self.baner.pack_propagate(False)
@@ -177,7 +178,7 @@ class layout():
         self.laps = counterPanel(self.baner, 1, 0)
         self.laps.frame.pack(side="left",fill="y",expand=True)
 
-        self.name = charPanelColection(self.baner,3, "AAA")
+        self.name = charPanelColection(self.baner,3, playerName)
         self.name.frame.pack(side="left",fill="y",expand=True)
 
 

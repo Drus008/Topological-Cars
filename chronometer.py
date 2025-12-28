@@ -2,8 +2,12 @@ from topologicalObjects import topologicalThickCurve, topologicalPolygon
 from topologicalCar import topologicalCar
 import numpy as np
 from time import time
-from tkinter import Label
 import json
+from Tmath import direcrion2D
+
+from pathlib import Path
+
+USER_DIR = Path.home() / "TopologicalRacing" / "Maps" #TODO this has to be created automaticaly
 
 
 class finishLine():
@@ -12,7 +16,6 @@ class finishLine():
         TCanvas (topologicalCanvas): The topological canvas where the finishLine will live.
         car (topologicalCar): The car that will be racing.
         size (float): The height of the finish line.
-        interface (Label): The label where the time will be shown. #TODO this has to be done apart.
         TOTAL_LAPS (int): The total number of laps that have to be completed to finish the race.
         laps (int): The number of laps done by the car.
         active (bool): Represents if the finish line is active, i.e. if the car crosses the line it counts as a lap. This attribute is meant to prevent crossing the finish line and going backwards from counting as one lap.
@@ -21,9 +24,10 @@ class finishLine():
         time (float): The time passed from the beginning of the race.
         newTrajectory (list[dict]): The record of the trajectory of the car once it starts the race.
         rival (rival): The replay of the loaded rival.
+        hitbox (topologicalPolygon): The hitbox of the finish line.
      """
 
-    def __init__(self, curve:topologicalThickCurve, car: topologicalCar, size = 20):
+    def __init__(self, curve:topologicalThickCurve, car: topologicalCar, mapName: str, space: str, playerName:str, rivalName:str, size = 20):
         """Creates the finish line.
         Args:
             curve (topologicalThickCurve): The curve where the finish line will be placed (at the start).
@@ -43,17 +47,16 @@ class finishLine():
         self.startTime = None
         self.time = 0
         
-        self.interface = Label(
-            self.TCanvas.root, text="",
-            font=("Helvetica", 40, "bold"),
-            bg="black", fg="red" )
-        self.interface.place(relx=0.5, rely=0.9, anchor="n")
-        
+        self.gameDir = USER_DIR / mapName / space
+        self.playerName = playerName
+        self.mapName = mapName
+
         self._createVisuals()
 
-        self.newTrajectory = []
-        self.rival = rival.cloneCar(car, self)        
+        self.placeCarBehindFinishLine()
 
+        self.newTrajectory = []
+        self.rival = rival.cloneCar(car, self, rivalName)
 
     def _createVisuals(self):
         """Creates the visual representation of the finish line."""
@@ -85,10 +88,17 @@ class finishLine():
                     color = "white"
                 topologicalPolygon.square(self.TCanvas,squarePosition,squareSide,angle, fill=color)
     
+    def placeCarBehindFinishLine(self):
+        displacement = self.hitbox.position - self.car.body.position
+        displacement = displacement - 30*direcrion2D(self.angle)
+        self.car.body.move(*displacement)
+        self.car.body.TRotation(self.angle-self.car.angle)
+        self.car.angle = self.angle
+        self.car.body.Traise()
+
     def checkLaps(self):
         """Checks if the car has completed a lap and keeps track of how many laps have been completed."""
         position = self.car.body.position
-
         if self.active:
             if self.hitbox.checkIfPointInside(position):
                 if self.laps==0:
@@ -98,24 +108,17 @@ class finishLine():
                     self.rival.start()
                 elif self.laps==self.TOTAL_LAPS:
                     print("RACE FINISHED", self.time)
-                    self.saveRecord("1", "1") # TODO This has to be done later on, because here it lags
+                    self.saveRecord() # TODO This has to be done later on, because here it lags
                     self.active=False
                     self.counting = False
                     self.rival.stop()
                 self.laps = self.laps + 1
-                print("LAPS:", self.laps)
                 self.active = False
         else:
-            localCar = self.TCanvas.reflectedPoint(position)
-            xDistance = abs(self.hitbox.position[0]-localCar[0])
-            yDistance = abs(self.hitbox.position[1]-localCar[1])
-            if xDistance>self.TCanvas.dimX/2 or yDistance>self.TCanvas.dimY/2:
+            distance = self.hitbox.computeDistanceToPoint(self.car.getPosition())
+            if distance>self.TCanvas.dimX/3:
                 self.active=True
 
-    def updateChronometer(self):
-        """Updates the values on the interface #TODO this has to be moved out"""
-        if self.counting:
-            self.interface.config(text=str(round(self.time,1)))
 
     def updateRecord(self):
         """Updates the record of the playable car."""
@@ -132,12 +135,11 @@ class finishLine():
         self.rival.update()
         self.updateRecord()
         self.checkLaps()
-        self.updateChronometer()
 
-    def saveRecord(self, map:str, player:str):
+    def saveRecord(self):
         """Saves the record as a file named mapplayer.json"""
-        trajectoryFile = {"map": map, "player": player, "trajectory":self.newTrajectory}
-        with open(map+player+".json", "w") as f:
+        trajectoryFile = {"map": self.mapName, "player": self.playerName, "trajectory":self.newTrajectory, "totalTime": self.newTrajectory[-1]["t"]}
+        with open(self.gameDir /("record"+self.playerName + ".json"), "w") as f:
             json.dump(trajectoryFile, f, indent=2)
 
 
@@ -150,7 +152,7 @@ class rival(topologicalPolygon):
     """
 
     @classmethod
-    def cloneCar(cls, car:topologicalCar, timer:finishLine):
+    def cloneCar(cls, car:topologicalCar, timer:finishLine, rivalName:str):
         """Clones a given car and sets it up to race."""
 
         rival = super().rectangle(car.TCanvas, car.body.position, car.height, car.width, timer.angle, fill="red")
@@ -160,7 +162,7 @@ class rival(topologicalPolygon):
         rival.angle = timer.angle
         rival.step = 0
         rival.hide()
-        rival.loadRecord("11")
+        rival.loadRecord(timer.gameDir / ("record"+ rivalName + ".json"))
         return rival
     
     def start(self):
@@ -171,9 +173,9 @@ class rival(topologicalPolygon):
         """Stops the run."""
         self.hide()
 
-    def loadRecord(self, name: str):
+    def loadRecord(self, recordDir: str):
         """Loads a record of a previous race into the clone."""
-        with open(name+'.json', 'r', encoding='utf-8') as f:
+        with open(recordDir, 'r', encoding='utf-8') as f:
             self.record = json.load(f)["trajectory"]
 
     def update(self):
@@ -189,3 +191,15 @@ class rival(topologicalPolygon):
                     self.angle = self.record[t]["angle"]
                     
                     break
+
+
+import sys
+import os
+
+def resourcePath(relative_path):
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
