@@ -12,7 +12,7 @@ class topologicalObject:
     Attributes:
         TCanvas (topologicalCanvas): The topological canvas where the point will be drawn.
         Tid (str): The id of the element on the topological canvas. It is a string with the format "Tid"+int.
-        position (array): The position where the object will be placed.
+        position (array): The position where the object is located.
         objects (List[List[int]]): A matrix where the i,j element is the id of the copy of the original object placed at the canvas i,j.
         zIndex: Used to manage some depth related aspects.
     """
@@ -53,7 +53,7 @@ class topologicalObject:
 
     def checkBounds(self)->None:
         """
-        Check if the object is out of its global position and moves it back to its corresponding global space if needed otherwise.
+        Check if the object is out of its global position and moves it back to its corresponding global space if needed.
         """
         x = self.position[0]
         if x<0:
@@ -91,7 +91,21 @@ class topologicalObject:
             for c in range(6):
                 self.TCanvas.canvas.itemconfig(self.objects[r][c], state = "normal")
 
+    def Traise(self)->None:
+        """Moves an object to the front"""
+        for r in range(6):
+            for c in range(6):
+                self.TCanvas.canvas.tag_raise(self.objects[r][c])
 
+    def computeDistanceToPoint(self, point:np.array)->float:
+        """Compues the distance between a global point and the object"""
+        points = self.TCanvas.topologicalPoint(*self.TCanvas.reflectedPoint(point))
+        objectCoodinates = self.position + 2*np.array([self.TCanvas.dimX, self.TCanvas.dimY])
+        distances = []
+        for r in range(6):
+            for c in range(6):
+                distances.append(np.linalg.norm(points[r][c]-objectCoodinates))
+        return min(distances)
         
 
 
