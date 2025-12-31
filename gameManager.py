@@ -1,10 +1,15 @@
-from topologicalTerrain import *
-from topologicalCar import topologicalCar
-from topologicalCanvas import torus, KleinBottleV, projectivePlane, topologicalCanvas
 from tkinter import Tk
+
+from topologicalCanvas import torus, KleinBottleV, projectivePlane, topologicalCanvas
+from topologicalCar import topologicalCar
 from chronometer import finishLine
 from inGameInterface import layout
+from topologicalTerrain import *
 
+
+
+
+from constants import *
 
 def selectMap(TCanvas: topologicalCanvas, map:str)->terrainManager:
     """Returns the desired map.
@@ -15,7 +20,7 @@ def selectMap(TCanvas: topologicalCanvas, map:str)->terrainManager:
     Returns:
         The selected map.
     """
-    if map=="pseudo-circle":
+    if map==MAP1_PRIVATE_NAME:
         return topologicalPseudoCircle(TCanvas)
 
 def selectSpace(interface:Tk, space:str, SIZE:float, extraSIZE: float, visualHelp:bool =False)->topologicalCanvas:
@@ -27,11 +32,11 @@ def selectSpace(interface:Tk, space:str, SIZE:float, extraSIZE: float, visualHel
         visualHelp (bool): If true it draws visual clues to help the player navigate.
     """
     windowSize = SIZE*1
-    if space=="torus":
+    if space==TORUS_PRIVATE_NAME:
         Topos = torus(interface, dimX= SIZE, dimY= SIZE, windowH=windowSize-extraSIZE, windowW=windowSize, visualHelp= visualHelp)
-    elif space=="klein":
+    elif space==KLEIN_PRIVATE_NAME:
         Topos = KleinBottleV(interface, dimX= SIZE, dimY= SIZE, windowH=windowSize-extraSIZE, windowW=windowSize, visualHelp= visualHelp)
-    elif space=="projective":
+    elif space==RP2_PRIVATE_NAME:
         Topos = projectivePlane(interface, dimX= SIZE, dimY= SIZE, windowH=windowSize-extraSIZE, windowW=windowSize, visualHelp= visualHelp)
     return Topos
 
@@ -47,13 +52,11 @@ def configureGame(interface:Tk, space: str, mapName:str, playerName:str, rival:s
     SIZE = 750
     LAYOUT_SIZE = 80
 
-    interface.geometry(str(SIZE)+"x"+str(SIZE)+"+"+str((interface.winfo_screenwidth()-SIZE)//2)+"+0")
-
     Topos = selectSpace(interface, space, SIZE, LAYOUT_SIZE)
     terrain = selectMap(Topos, mapName)
     car = topologicalCar(Topos, x0=20, y0=20, height=20, width=10, ground=terrain, acc=8, v0x=0, v0y=0)
 
-    timer = finishLine(terrain.terrains[0], car, mapName=mapName, space=space, playerName=playerName, rivalName=rival)
+    timer = finishLine(terrain.terrains[0], car, spaceName=space, mapName=mapName, space=space, playerName=playerName, rivalName=rival)
     l = layout(interface, playerName)
     while(True):
         l.speed.updateNumber(int(np.linalg.norm(car.v)))

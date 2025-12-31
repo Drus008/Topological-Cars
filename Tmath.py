@@ -27,7 +27,7 @@ def direcrion2D(angle:float)->array:
         A 2D array with the direction.
     """
 
-    return np.array([cos(angle), sin(angle)])
+    return array([cos(angle), sin(angle)])
 
 def baseChange(b1: array, b2: array, v:array)->array:
     """
@@ -41,7 +41,7 @@ def baseChange(b1: array, b2: array, v:array)->array:
     Returns:
         The coordinates of the vector v in the basis b1, b2.
     """
-    baseMatrix = np.array([b1,b2])
+    baseMatrix = array([b1,b2])
     return np.linalg.solve(baseMatrix, v)
 
 def baseChangeOrt(b1: array, b2: array, v):

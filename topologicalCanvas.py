@@ -1,7 +1,8 @@
 from tkinter import Canvas, Tk
-from stateMachine import keyStateMachine
 import numpy as np
 import time
+
+from stateMachine import keyStateMachine
 
 # If optimization is necessary, a modification that could help is to only draw to the external squares the moving parts, and not the fixed ones
 

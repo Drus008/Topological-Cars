@@ -1,7 +1,7 @@
-from topologicalCanvas import topologicalCanvas
-from topologicalObjects import topologicalPolygon, topologicalThickCurve
 import numpy as np
 
+from topologicalObjects import topologicalPolygon, topologicalThickCurve
+from topologicalCanvas import topologicalCanvas
 
 
 class terrainManager:

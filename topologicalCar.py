@@ -1,10 +1,10 @@
+from numpy import pi
+import numpy as np
+
 from topologicalObjects import topologicalPolygon
 from topologicalCanvas import topologicalCanvas
 from topologicalTerrain import terrainManager
-from numpy import pi
-import numpy as np
 from Tmath import direcrion2D
-
 
 class topologicalCar():
     """

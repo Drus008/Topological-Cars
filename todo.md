@@ -1,1 +1,2 @@
-Logo: Una señal de precaució de velocitat amb un infinit.
+Logo: A trafic signal with infinity speed as limit.
+Sound effects

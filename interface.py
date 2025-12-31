@@ -1,17 +1,26 @@
+from tkinter import Tk, Label, Button, Frame, Listbox, Entry, Canvas, Label
+from functools import partial
+from PIL import ImageTk
 import tkinter as tk
-from tkinter import Tk, Label, Button, Frame, Listbox, Entry
+
+
+from fielesManager import checkFolders, getRecords, loadImage
+from transitions import beginGame
 from constants import *
 
-from PIL import Image, ImageTk
-from functools import partial
-
-
 EXTERNAL_PADDING = TITILE_SIZE
+INTERNAL_PADDING = TITILE_SIZE/2
+INTERSECTION_PADDING = TITILE_SIZE*3/4
+
+BORDER_THICK = 2
+
+
 END_SECTION_PADDING = SUBSUBTITLE_SIZE*3/4
 TITLE_SECTION_PADDING = (SUBSUBTITLE_SIZE/4)/2
 
 BG_VISUALS = BGCOLOR
-BG_PADDINGS = BGCOLOR
+BG_PADDINGS = BGCOLOR_2
+
 
 def changeSelection(index: int, options: list, e):
     selectedIndex = options[-1].get()
@@ -19,6 +28,8 @@ def changeSelection(index: int, options: list, e):
         options[selectedIndex]["button"].config(image=options[selectedIndex]["img"])
     options[-1].set(index)
     options[index]["button"].config(image=options[index]["imgS"])
+
+    loadRivals()
 
 def hoverImg(index: int, options: list, e):
     options[index]["button"].config(cursor="hand2")
@@ -30,38 +41,53 @@ def unhoverImg(index: int, options: list, e):
     options[index]["label"].config(fg=TEXT_COLOR)
 
 
+DIMX = 750
+DIMY = 750
 
+INTERIOR_WIDTH = DIMX-2*EXTERNAL_PADDING
 
 main = Tk()
-main.geometry("750x750")
-main.title(GAME_NAME)
-mainFrame = Frame(main, bg=BG_PADDINGS, padx=EXTERNAL_PADDING*1.5, pady=EXTERNAL_PADDING)
-mainFrame.pack(expand=True, fill="both")
+xPos = str((main.winfo_screenwidth()-DIMX)//2)
+yPos = (main.winfo_screenheight()-30-DIMY)//2
+yPos = str(yPos) if yPos>0 else "0"
+main.geometry(str(DIMX)+"x"+str(DIMY)+"+"+xPos+"+"+yPos)
 
+checkFolders()
 
 def offFoucs(event):
     event.widget.focus_set()
-
-
 main.bind("<Button-1>", offFoucs)
 
 
+#main.resizable(False, False)
+main.title(GAME_NAME)
+mainCanvas = Canvas(bg=BGCOLOR)
+mainCanvas.pack(expand=True, fill="both")
+
+from decoration import decorationFamily
+
+D = decorationFamily(mainCanvas, 100)
+
 # Title
-titleFrame = Frame(mainFrame, bg=BG_VISUALS)
-titleFrame.pack(fill="x")
+totalHeight = EXTERNAL_PADDING
+TITLE_FRAME_HEIGHT = TITILE_SIZE*2
+
+titleFrame = Frame(mainCanvas, bg=BG_VISUALS, width=INTERIOR_WIDTH, height=TITLE_FRAME_HEIGHT, highlightbackground=DETAILS_COLOR, highlightthickness=BORDER_THICK, highlightcolor=DETAILS_COLOR)
+titleFrame.place(x=EXTERNAL_PADDING, y=totalHeight)
+totalHeight = EXTERNAL_PADDING+TITLE_FRAME_HEIGHT + INTERSECTION_PADDING + BORDER_THICK
+titleFrame.pack_propagate(False)
 
 title = Label(titleFrame, text=GAME_NAME.upper(), bg=BGCOLOR, fg=MAINCOLOR, font=("Segoe UI", TITILE_SIZE, "bold"))
-title.pack()
+title.pack(expand=True)
 
-titleBotPadding = Frame(mainFrame, bg=BG_PADDINGS)
-titleBotPadding.pack(pady=END_SECTION_PADDING)
-
-selectorsFrame = Frame(mainFrame, bg=BG_PADDINGS)
-selectorsFrame.pack(fill="x")
 
 # Space selection
-spaceFrame = Frame(selectorsFrame, bg=BG_VISUALS)
-spaceFrame.pack(fill="x")
+
+SELECTION_FRAME_HEIGHT = 160
+spaceFrame = Frame(mainCanvas, bg=BG_VISUALS, width=INTERIOR_WIDTH, height=SELECTION_FRAME_HEIGHT, highlightbackground=DETAILS_COLOR, highlightthickness=BORDER_THICK, highlightcolor=DETAILS_COLOR)
+spaceFrame.pack_propagate(False)
+spaceFrame.place(x=EXTERNAL_PADDING, y=totalHeight)
+totalHeight = totalHeight + SELECTION_FRAME_HEIGHT + INTERSECTION_PADDING + BORDER_THICK
 
 spaceText = Label(spaceFrame, text="select space", bg=BGCOLOR, fg=TEXT_COLOR, font=("Segoe UI", SUBTITLE_SIZE, "bold"))
 spaceText.pack()
@@ -69,29 +95,29 @@ spaceText.pack()
 spaceTopPadding = Frame(spaceFrame, bg=BG_VISUALS)
 spaceTopPadding.pack(pady=TITLE_SECTION_PADDING)
 
-spaceSelectorsFrame = Frame(spaceFrame, bg=BGCOLOR)
-spaceSelectorsFrame.pack(fill="x")
+spacemainCanvas = Frame(spaceFrame, bg=BGCOLOR)
+spacemainCanvas.pack(fill="x")
 
 
 spaceVariable = tk.IntVar()
 spaceVariable.set(-1)
-spaceList = [{"name":TORUS_PUBLIC_NAME.upper()},{"name": RP2_PUBLIC_NAME.upper()},  {"name":KLEIN_PUBLIC_NAME.upper()}, spaceVariable]
+spaceList = [{"name":TORUS_PUBLIC_NAME.upper(), "privateName": TORUS_PRIVATE_NAME},{"name": RP2_PUBLIC_NAME.upper(), "privateName": RP2_PRIVATE_NAME},  {"name":KLEIN_PUBLIC_NAME.upper(), "privateName": KLEIN_PRIVATE_NAME}, spaceVariable]
 
 for i in range(len(spaceList)-1):
-    spaceList[i]["frame"] = Frame(spaceSelectorsFrame, bg=BGCOLOR)
+    spaceList[i]["frame"] = Frame(spacemainCanvas, bg=BGCOLOR)
     spaceList[i]["frame"].grid(row = 0, column=i, sticky="ew")
-    spaceSelectorsFrame.grid_columnconfigure(i, weight=1, uniform="space")
+    spacemainCanvas.grid_columnconfigure(i, weight=1, uniform="space")
     spaceList[i]["label"] = Label(spaceList[i]["frame"], text=spaceList[i]["name"], bg=BGCOLOR, fg=TEXT_COLOR, font=("Segoe UI", SUBSUBTITLE_SIZE))
     spaceList[i]["label"].pack()
 
-    img = Image.open("img.png").resize(IMG_SIZE)
+    img = loadImage("img").resize(IMG_SIZE)
     spaceList[i]["img"] = ImageTk.PhotoImage(img)
 
-    imgS = Image.open("imgS.png").resize(IMG_SIZE)
+    imgS = loadImage("imgS").resize(IMG_SIZE)
     spaceList[i]["imgS"] = ImageTk.PhotoImage(imgS)
 
 
-    spaceList[i]["button"] = tk.Label( spaceList[i]["frame"], image=spaceList[i]["img"], bg=BGCOLOR, bd=0)
+    spaceList[i]["button"] = Label( spaceList[i]["frame"], image=spaceList[i]["img"], bg=BGCOLOR, bd=0)
     spaceList[i]["button"].pack()
 
     spaceList[i]["button"].bind("<Button-1>", partial(changeSelection, i, spaceList))
@@ -107,14 +133,12 @@ spaceBotPadding.pack(fill="x")
 
 
 
-spaceMapPadding = Frame(selectorsFrame, bg=BG_PADDINGS)
-spaceMapPadding.pack(pady=END_SECTION_PADDING)
-
-
 
 # Map selection
-mapFrame = Frame(selectorsFrame, bg=BG_VISUALS)
-mapFrame.pack(fill="x")
+mapFrame = Frame(mainCanvas, bg=BG_VISUALS, width=INTERIOR_WIDTH, height=SELECTION_FRAME_HEIGHT, highlightbackground=DETAILS_COLOR, highlightthickness=BORDER_THICK, highlightcolor=DETAILS_COLOR)
+mapFrame.pack_propagate(False)
+mapFrame.place(x=EXTERNAL_PADDING, y=totalHeight)
+totalHeight = totalHeight + SELECTION_FRAME_HEIGHT + INTERSECTION_PADDING + BORDER_THICK
 
 mapText = Label(mapFrame, text="select map", bg=BGCOLOR, fg=TEXT_COLOR, font=("Segoe UI", SUBTITLE_SIZE, "bold"))
 mapText.pack()
@@ -122,28 +146,28 @@ mapText.pack()
 mapTopPadding = Frame(mapFrame, bg=BG_VISUALS)
 mapTopPadding.pack(pady=TITLE_SECTION_PADDING)
 
-mapSelectorsFrame = Frame(mapFrame, bg=BGCOLOR)
-mapSelectorsFrame.pack(fill="x")
+mapmainCanvas = Frame(mapFrame, bg=BGCOLOR)
+mapmainCanvas.pack(fill="x")
 
 mapVariable = tk.IntVar()
 mapVariable.set(-1)
-mapsList = [{"name": MAP1_PUBLIC_NAME.upper()}, {"name":MAP2_PUBLIC_NAME.upper()}, mapVariable]
+mapsList = [{"name": MAP1_PUBLIC_NAME.upper(), "privateName":MAP1_PRIVATE_NAME}, {"name":MAP2_PUBLIC_NAME.upper(), "privateName":MAP2_PRIVATE_NAME}, mapVariable]
 
 for i in range(len(mapsList)-1):
-    mapsList[i]["frame"] = Frame(mapSelectorsFrame, bg=BGCOLOR)
+    mapsList[i]["frame"] = Frame(mapmainCanvas, bg=BGCOLOR)
     mapsList[i]["frame"].grid(row = 0, column=i, sticky="ew")
-    mapSelectorsFrame.grid_columnconfigure(i, weight=1, uniform="map")
+    mapmainCanvas.grid_columnconfigure(i, weight=1, uniform="map")
     mapsList[i]["label"] = Label(mapsList[i]["frame"], text=mapsList[i]["name"], bg=BGCOLOR, fg=TEXT_COLOR, font=("Segoe UI", SUBSUBTITLE_SIZE))
     mapsList[i]["label"].pack()
 
-    img = Image.open("img.png").resize(IMG_SIZE)
+    img = loadImage("img").resize(IMG_SIZE)
     mapsList[i]["img"] = ImageTk.PhotoImage(img)
 
-    imgS = Image.open("imgS.png").resize(IMG_SIZE)
+    imgS = loadImage("imgS").resize(IMG_SIZE)
     mapsList[i]["imgS"] = ImageTk.PhotoImage(imgS)
 
 
-    mapsList[i]["button"] = tk.Label( mapsList[i]["frame"], image=mapsList[i]["img"], bg=BGCOLOR, bd=0)
+    mapsList[i]["button"] = Label( mapsList[i]["frame"], image=mapsList[i]["img"], bg=BGCOLOR, bd=0)
     mapsList[i]["button"].pack()
 
     mapsList[i]["button"].bind("<Button-1>", partial(changeSelection, i, mapsList))
@@ -151,31 +175,21 @@ for i in range(len(mapsList)-1):
     mapsList[i]["button"].bind("<Enter>", partial(hoverImg, i, mapsList))
     mapsList[i]["button"].bind("<Leave>", partial(unhoverImg, i, mapsList))
 
-spaceMapPadding = Frame(mapFrame, bg=BG_VISUALS, height=END_SECTION_PADDING)
-spaceMapPadding.pack(fill="x")
 
 
-
-
-
-mapPlayerPadding = Frame(selectorsFrame, bg=BG_PADDINGS)
-mapPlayerPadding.pack(pady=END_SECTION_PADDING)
 
 
 # Players
-
-playersFrame = Frame(selectorsFrame, bg=BG_VISUALS)
-playersFrame.pack(fill="x", expand=True)
-
-playersFrame.columnconfigure(0, weight=4, uniform="players")
-playersFrame.columnconfigure(1, weight=1, uniform="players")
-playersFrame.columnconfigure(2, weight=4, uniform="players")
+PLAYER_SECTIONS_WIDTH = (INTERIOR_WIDTH-INTERSECTION_PADDING)/2 - BORDER_THICK*2
+RIVAL_HEIGHT = 211
 
 
 
 # Rival selection
-rivalFrame = Frame(playersFrame, bg=BG_VISUALS)
-rivalFrame.grid(row=0, column=0, sticky="nsew")
+rivalFrame = Frame(mainCanvas, bg=BG_VISUALS, width=PLAYER_SECTIONS_WIDTH, height=RIVAL_HEIGHT, highlightbackground=DETAILS_COLOR, highlightthickness=BORDER_THICK, highlightcolor=DETAILS_COLOR)
+rivalFrame.pack_propagate(False)
+rivalFrame.place(x=EXTERNAL_PADDING, y=totalHeight)
+
 
 rivalText = Label(rivalFrame, text="select rival", bg=BGCOLOR, fg=TEXT_COLOR, font=("Segoe UI", SUBTITLE_SIZE, "bold"))
 rivalText.pack()
@@ -190,13 +204,13 @@ listFrame.pack_propagate(False)
 listFrame.pack(fill="x", padx=30)
 
 
-def manageScrollIndicators():
+def manageScrollIndicators(*args):
     scrollPosition = rivalList.yview()
-    if scrollPosition[0]!=0:
+    if scrollPosition[0]>0:
         rivalSuperiorIndicator.config(bg=ALTERNATIVE_COLOR_1)
     else:
         rivalSuperiorIndicator.config(bg=BGCOLOR)
-    if scrollPosition[1]!=1:
+    if scrollPosition[1]<1:
         rivalInferiorIndicator.config(bg=ALTERNATIVE_COLOR_2)
     else:
         rivalInferiorIndicator.config(bg=BGCOLOR)
@@ -207,12 +221,25 @@ def mousewheelManager(event):
     else:
         rivalList.yview_scroll(1, "units")
     
-    manageScrollIndicators()
 
     return "break"
 
-items = ["", "0:00 | None", "6:66 | Uwuvevwevew En", "1:24 | Clara", "3:47 | Lluís", "1:11 | Aleix", "2:93 | Marta", "5:12 | Drus", "1:29 | Adrià", "7:99 | Marc", "0:11 | Lara"]
-
+def loadRivals():
+    mapId = mapsList[-1].get()
+    spaceId = spaceList[-1].get()
+    if mapId==-1 or spaceId==-1:
+        return
+    map = mapsList[mapId]["privateName"]
+    space = spaceList[spaceId]["privateName"]
+    rivalList.delete(2, tk.END)
+    records = getRecords(space, map)
+    global racers
+    racers = records
+    print(records)
+    for record in records:
+        rivalList.insert("end", record["time"]+" | "+str(record["name"]))
+racers = []
+items = ["", "E:RR | None"] #There is a bug where you can select the empty item
 rivalList = Listbox(
     listFrame,
     font=("Segoe UI", SUBTITLE_SIZE),
@@ -222,10 +249,13 @@ rivalList = Listbox(
     selectforeground=MAINCOLOR,
     highlightthickness=0,
     relief="flat",
-    height=4
+    height=4,
+    yscrollcommand=manageScrollIndicators,
+    exportselection=False #To fix the bug where the item gets unselected when doble clicking on the entry
 )
 for item in items:
     rivalList.insert("end", item)
+rivalList.select_set(1)
 rivalList.place(x=0, y=-20, relwidth=1, relheight=1.2)
 rivalList.bind("<MouseWheel>", mousewheelManager)
 
@@ -236,15 +266,10 @@ rivalInferiorIndicator.pack(fill="x")
 
 manageScrollIndicators()
 
-# middle space
-
-middleFrame = Frame(playersFrame, bg=BG_PADDINGS)
-middleFrame.grid(row=0, column=1, sticky="nsew")
 
 # final steps
 
-finalFrame = Frame(playersFrame, bg=BG_PADDINGS)
-finalFrame.grid(row=0, column=2, sticky="nsew")
+NAME_HEIGHT = 100
 
 def checkLen(new_text):
     if len(new_text) < PLAYER_NAME_LEN:
@@ -253,10 +278,13 @@ def checkLen(new_text):
 
 
 # Player name
-nameFrame = Frame(finalFrame, bg=BG_VISUALS)
-nameFrame.pack(fill="x")
+BUTTON_X = EXTERNAL_PADDING+PLAYER_SECTIONS_WIDTH+EXTERNAL_PADDING
+nameFrame = Frame(mainCanvas, bg=BG_VISUALS, width=PLAYER_SECTIONS_WIDTH, height=NAME_HEIGHT, highlightbackground=DETAILS_COLOR, highlightthickness=BORDER_THICK,highlightcolor=DETAILS_COLOR)
+nameFrame.pack_propagate(False)
+nameFrame.place(x=BUTTON_X, y=totalHeight)
+totalHeight = totalHeight + NAME_HEIGHT + INTERSECTION_PADDING + BORDER_THICK
 
-    # Block large names
+    # Blocks large names
 validation_register = nameFrame.register(checkLen)
 
 nameText = Label(nameFrame, text="choose your name", bg=BGCOLOR, fg=TEXT_COLOR, font=("Segoe UI", SUBTITLE_SIZE, "bold"))
@@ -273,7 +301,7 @@ nameEntry = Entry(entryFrame, width=13, font=("Segoe UI", SUBTITLE_SIZE, "bold")
 
 nameEntry.pack()
 
-underline = tk.Frame(entryFrame, height=2, bg=DETAILS_COLOR)
+underline = Frame(entryFrame, height=2, bg=DETAILS_COLOR)
 underline.pack(fill="x")
 
 def showUnderline(event):
@@ -288,25 +316,55 @@ def hideUnderline(event):
 nameEntry.bind("<FocusIn>", showUnderline)
 nameEntry.bind("<FocusOut>", hideUnderline)
 
-nameBotPadding = Frame(finalFrame, bg=BG_VISUALS, height=2*END_SECTION_PADDING)
-nameBotPadding.pack(fill="x")
-
-# Margin
-
-titleBotPadding = Frame(finalFrame, bg=BG_PADDINGS, height=2*END_SECTION_PADDING)
-titleBotPadding.pack(fill="x")
 
 # Start button
 
-buttonFrame = Frame(finalFrame, bg=BG_VISUALS)
-buttonFrame.pack()
+
+def startGame():
+    parameters = {}
+    spaceId = spaceList[-1].get()
+    if spaceId==-1:
+        print("ERROR: NO SPACE SELECTED") #TODO, something to reflec it
+        return False
+    else:
+        parameters["space"] = spaceList[spaceId]["privateName"]
+
+    mapId = mapsList[-1].get()
+    if mapId==-1:
+        print("ERROR: NO MAP SELECTED") #TODO, something to reflec it
+        return False
+    else:
+        parameters["map"] = mapsList[mapId]["privateName"]
+    rivalId = rivalList.curselection()
+    if rivalId:
+        rivalId = rivalId[0]
+        if rivalId>1:
+            parameters["rival"] = racers[-2]["name"]
+        else:
+            parameters["rival"] = None  
+    else:
+        parameters["rival"] = None  
+
+    name = nameEntry.get()
+    if name=="":
+        print("ERROR: NO NAME CHOOSED")
+        return False
+    parameters["name"] = name
+    for widget in main.winfo_children():
+        widget.destroy()
+    beginGame(main, parameters)
+
+
+BUTTON_WIDTH = 200
+BUTTON_HEIGHT = 50
 
 pixel_virtual = tk.PhotoImage(width=1, height=1)
-startButon = Button(buttonFrame, bg=DETAILS_COLOR, fg=BGCOLOR, cursor="hand2", activebackground=MAINCOLOR_DARK,
+startButon = Button(mainCanvas, bg=DETAILS_COLOR, fg=BGCOLOR, cursor="hand2", activebackground=MAINCOLOR_DARK,
                     text="START", relief="raised", border=5, font=("Segoe UI", SUBTITLE_SIZE, "bold"), image=pixel_virtual,
-                compound="c", width=200, height=50)
-startButon.pack(side="bottom")
-
+                compound="c", width=BUTTON_WIDTH, height=BUTTON_HEIGHT,
+                command=startGame)
+startButon.place(x=BUTTON_X+ (PLAYER_SECTIONS_WIDTH-BUTTON_WIDTH)/2, y=totalHeight)
+totalHeight = totalHeight + BUTTON_HEIGHT + 2*INTERSECTION_PADDING+EXTERNAL_PADDING
 def onEnterButton(e):
     startButon.config(bg=MAINCOLOR)
 
@@ -316,4 +374,5 @@ def onLeaveButton(e):
 startButon.bind("<Enter>", onEnterButton)
 startButon.bind("<Leave>", onLeaveButton)
 
+D.startCalculations()
 main.mainloop()

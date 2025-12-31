@@ -1,14 +1,12 @@
-from topologicalObjects import topologicalThickCurve, topologicalPolygon
-from topologicalCar import topologicalCar
-import numpy as np
+
 from time import time
-import json
+import numpy as np
+
+from topologicalObjects import topologicalThickCurve, topologicalPolygon
+from fielesManager import saveRecord, loadRecord
+from topologicalCar import topologicalCar
 from Tmath import direcrion2D
-
-from pathlib import Path
-
-USER_DIR = Path.home() / "TopologicalRacing" / "Maps" #TODO this has to be created automaticaly
-
+from constants import *
 
 class finishLine():
     """A class that manages all the race-like features.
@@ -27,7 +25,7 @@ class finishLine():
         hitbox (topologicalPolygon): The hitbox of the finish line.
      """
 
-    def __init__(self, curve:topologicalThickCurve, car: topologicalCar, mapName: str, space: str, playerName:str, rivalName:str, size = 20):
+    def __init__(self, curve:topologicalThickCurve, car: topologicalCar, spaceName:str, mapName: str, space: str, playerName:str, rivalName:str=None, size = 20):
         """Creates the finish line.
         Args:
             curve (topologicalThickCurve): The curve where the finish line will be placed (at the start).
@@ -47,16 +45,19 @@ class finishLine():
         self.startTime = None
         self.time = 0
         
-        self.gameDir = USER_DIR / mapName / space
         self.playerName = playerName
         self.mapName = mapName
+        self.spaceName = spaceName
 
         self._createVisuals()
 
         self.placeCarBehindFinishLine()
 
         self.newTrajectory = []
-        self.rival = rival.cloneCar(car, self, rivalName)
+        if rivalName:
+            self.rival = rival.cloneCar(car, self, rivalName, space, mapName)
+        else:
+            self.rival = None
 
     def _createVisuals(self):
         """Creates the visual representation of the finish line."""
@@ -88,9 +89,10 @@ class finishLine():
                     color = "white"
                 topologicalPolygon.square(self.TCanvas,squarePosition,squareSide,angle, fill=color)
     
-    def placeCarBehindFinishLine(self):
+    def placeCarBehindFinishLine(self, distance: int = 30):
+        """Places de car just behind th finish line"""
         displacement = self.hitbox.position - self.car.body.position
-        displacement = displacement - 30*direcrion2D(self.angle)
+        displacement = displacement - distance*direcrion2D(self.angle)
         self.car.body.move(*displacement)
         self.car.body.TRotation(self.angle-self.car.angle)
         self.car.angle = self.angle
@@ -105,13 +107,15 @@ class finishLine():
                     self.startTime = time()
                     print("STARTING RACE")
                     self.counting = True
-                    self.rival.start()
+                    if self.rival:
+                        self.rival.start()
                 elif self.laps==self.TOTAL_LAPS:
                     print("RACE FINISHED", self.time)
-                    self.saveRecord() # TODO This has to be done later on, because here it lags
+                    saveRecord(self.mapName, self.spaceName, self.playerName, self.newTrajectory) # TODO This has to be done later on, because here it lags
                     self.active=False
                     self.counting = False
-                    self.rival.stop()
+                    if self.rival:
+                        self.rival.stop()
                 self.laps = self.laps + 1
                 self.active = False
         else:
@@ -132,15 +136,11 @@ class finishLine():
         """Updates all the necessary things."""
         if self.counting:
             self.time = time() - self.startTime
-        self.rival.update()
+        if self.rival:
+            self.rival.update()
         self.updateRecord()
         self.checkLaps()
 
-    def saveRecord(self):
-        """Saves the record as a file named mapplayer.json"""
-        trajectoryFile = {"map": self.mapName, "player": self.playerName, "trajectory":self.newTrajectory, "totalTime": self.newTrajectory[-1]["t"]}
-        with open(self.gameDir /("record"+self.playerName + ".json"), "w") as f:
-            json.dump(trajectoryFile, f, indent=2)
 
 
 class rival(topologicalPolygon):
@@ -152,7 +152,7 @@ class rival(topologicalPolygon):
     """
 
     @classmethod
-    def cloneCar(cls, car:topologicalCar, timer:finishLine, rivalName:str):
+    def cloneCar(cls, car:topologicalCar, timer:finishLine, rivalName:str, space:str, map:str):
         """Clones a given car and sets it up to race."""
 
         rival = super().rectangle(car.TCanvas, car.body.position, car.height, car.width, timer.angle, fill="red")
@@ -162,7 +162,7 @@ class rival(topologicalPolygon):
         rival.angle = timer.angle
         rival.step = 0
         rival.hide()
-        rival.loadRecord(timer.gameDir / ("record"+ rivalName + ".json"))
+        rival.record = loadRecord(space, map, rivalName)
         return rival
     
     def start(self):
@@ -172,11 +172,6 @@ class rival(topologicalPolygon):
     def stop(self):
         """Stops the run."""
         self.hide()
-
-    def loadRecord(self, recordDir: str):
-        """Loads a record of a previous race into the clone."""
-        with open(recordDir, 'r', encoding='utf-8') as f:
-            self.record = json.load(f)["trajectory"]
 
     def update(self):
         """Updates the clone's position and angle based on the time elapsed and the loaded trajectory."""
@@ -191,15 +186,3 @@ class rival(topologicalPolygon):
                     self.angle = self.record[t]["angle"]
                     
                     break
-
-
-import sys
-import os
-
-def resourcePath(relative_path):
-    try:
-        base_path = sys._MEIPASS
-    except Exception:
-        base_path = os.path.abspath(".")
-
-    return os.path.join(base_path, relative_path)
