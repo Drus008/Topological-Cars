@@ -1,0 +1,1 @@
+Logo: Una señal de precaució de velocitat amb un infinit.
