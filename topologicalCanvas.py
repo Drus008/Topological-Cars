@@ -3,6 +3,7 @@ import numpy as np
 import time
 
 from stateMachine import keyStateMachine
+from constants import BGCOLOR
 
 # If optimization is necessary, a modification that could help is to only draw to the external squares the moving parts, and not the fixed ones
 
@@ -62,7 +63,7 @@ class topologicalCanvas():
         if self.vOrientation==-1:
             return self.dimX-x
 
-    def __init__(self, tk:Tk, hOrientation: int, vOrientation: int,  dimX=300, dimY=300, windowW= 400, windowH=400, visualHelp = False):
+    def __init__(self, tk:Tk, hOrientation: int, vOrientation: int,  dimX=300, dimY=300, windowW= 400, windowH=400, bg:str=BGCOLOR, visualHelp = False):
         """
         Initializes a topological canvas.
 
@@ -79,7 +80,7 @@ class topologicalCanvas():
         """
         self.root = tk
         self.canvas: Canvas = Canvas(tk, width=windowW, height=windowH,
-                                     scrollregion=(0,0,dimX*6,dimY*6))
+                                     scrollregion=(0,0,dimX*6,dimY*6), bg=BGCOLOR)
         self.visualHelp = visualHelp
         if visualHelp:
             for i in range(6):

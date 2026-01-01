@@ -5,6 +5,7 @@ from topologicalObjects import topologicalPolygon
 from topologicalCanvas import topologicalCanvas
 from topologicalTerrain import terrainManager
 from Tmath import direcrion2D
+from constants import *
 
 class topologicalCar():
     """
@@ -22,7 +23,7 @@ class topologicalCar():
         angVel (float): The speed at which the car turns.
     """
 
-    def __init__(self, TCanvas: topologicalCanvas, ground:terrainManager, x0:float, y0:float, height:float, width:float, color="blue", acc=1, v0x = 0, v0y=0,rotationSpeed = 1):
+    def __init__(self, TCanvas: topologicalCanvas, ground:terrainManager, x0:float, y0:float, height:float, width:float, color=MAINCOLOR, acc=15, v0x = 0, v0y=0,rotationSpeed = 1):
         
         """
         Initializes the car given the basic parameters.
@@ -53,7 +54,7 @@ class topologicalCar():
         self.v = np.array([v0x, v0y], float)
         self.a = acc
         self.angle = pi/2
-
+        self.momentum = 0
         self.angVel = rotationSpeed
 
         self.width = width
@@ -89,25 +90,27 @@ class topologicalCar():
     
 
     def calcAcc(self)->None:
-        """Computes the acceleration of the car (based on terrain, friction, power...) and updates its speed."""
-
-        power = 0
-        if self.TCanvas.keyStates["w"]:
-            power = 1
+        """Computes the acceleration of the car (based on terrain, friction, power...) and updates its speed and angle."""
+        torque = 0
         if self.TCanvas.keyStates["s"]:
-            power = -1
+            torque = -0.1
+        elif self.TCanvas.keyStates["w"]:
+            self.momentum = self.momentum + self.TCanvas.delta
+            torque = 1-np.exp(-self.momentum/5-0.2)
+        else:
+            if self.momentum>0:
+                self.momentum = self.momentum - self.TCanvas.delta*3
         
-        power = power*self.a
-
-        AIR_FRICTION = 0.5
-        GRIP, GROUND_FRICTION = self.ground.getFriction(self.body.position)
+        
+        AIR_FRICTION = 1
+        GROUND_FRICTION, GRIP, TRACTION = self.ground.getFriction(self.body.position)
 
         tangDirection = direcrion2D(self.angle)
         perpDirection = np.array((tangDirection[1], -tangDirection[0]))
-        acc = tangDirection*power*10
+        acc = tangDirection*self.a*TRACTION*torque
         acc = acc - self.v*AIR_FRICTION
+        acc = acc - (np.sign(np.dot(self.v,tangDirection)))*tangDirection*GROUND_FRICTION
         speedCoef = np.exp(-np.linalg.norm(self.v)/250)
-        acc = acc - np.sign(np.dot(self.v,tangDirection))*tangDirection*GROUND_FRICTION
         acc = acc - speedCoef*GRIP*np.dot(self.v,perpDirection)*perpDirection
         
         self.v = self.v + acc*self.TCanvas.delta
@@ -138,5 +141,3 @@ class topologicalCar():
             self.rotateCar(1)
         if self.TCanvas.keyStates["d"]:
             self.rotateCar(-1)
-
-

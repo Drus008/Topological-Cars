@@ -53,7 +53,7 @@ class finishLine():
 
         self.placeCarBehindFinishLine()
 
-        self.newTrajectory = []
+        self.newTrajectory = [{"x":self.car.body.position[0], "y":self.car.body.position[1], "angle": self.car.angle, "t":0}]
         if rivalName:
             self.rival = rival.cloneCar(car, self, rivalName, space, mapName)
         else:

@@ -32,7 +32,7 @@ def getRecords(space: str, map: str)-> dict:
             record = json.load(file)
             secInMin = 60
             timeStr = str(round(record["finalTime"])//secInMin) + ":" + str(round(record["finalTime"])%secInMin)
-            rivals.append({"time":timeStr, "name": record["name"]})
+            rivals.append({"time":timeStr, "name": record["player"]})
     
     orderedRivals = sorted(rivals, key=lambda x: x["time"])
     return orderedRivals
@@ -40,7 +40,7 @@ def getRecords(space: str, map: str)-> dict:
 def saveRecord(map:str, space:str, playerName:str, trajectory:dict):
         """Saves the record as a file named recordplayer.json on the respective file (map/space/)"""
         direction = USER_DIR / map / space
-        trajectoryFile = {"map": map, "space":space, "player": playerName, "trajectory":trajectory, "totalTime": trajectory[-1]["t"]}
+        trajectoryFile = {"map": map, "space":space, "player": playerName, "trajectory":trajectory, "finalTime": trajectory[-1]["t"]}
         with open(direction /("record"+playerName + ".json"), "w") as f:
             json.dump(trajectoryFile, f, indent=2)
 
@@ -49,8 +49,8 @@ def loadRecord(space:str, map:str, playerName:str):
     """Loads a record of a previous race into the clone."""
     direction = USER_DIR / map / space / ("record" + playerName + ".json")
     with open(direction, 'r', encoding='utf-8') as f:
-        record = json.load(f)["trajectory"]
-    return record
+        record = json.load(f)
+    return record["trajectory"]
 
 
 def loadImage(iconName: str)->Image.Image:

@@ -54,7 +54,7 @@ def configureGame(interface:Tk, space: str, mapName:str, playerName:str, rival:s
 
     Topos = selectSpace(interface, space, SIZE, LAYOUT_SIZE)
     terrain = selectMap(Topos, mapName)
-    car = topologicalCar(Topos, x0=20, y0=20, height=20, width=10, ground=terrain, acc=8, v0x=0, v0y=0)
+    car = topologicalCar(Topos, x0=20, y0=20, height=20, width=10, ground=terrain, v0x=0, v0y=0)
 
     timer = finishLine(terrain.terrains[0], car, spaceName=space, mapName=mapName, space=space, playerName=playerName, rivalName=rival)
     l = layout(interface, playerName)
@@ -66,3 +66,8 @@ def configureGame(interface:Tk, space: str, mapName:str, playerName:str, rival:s
         car.updateCar()
         timer.update()
         Topos.canvas.update()
+
+
+if __name__=="__main__":
+    tk = Tk()
+    configureGame(tk, TORUS_PRIVATE_NAME, MAP1_PRIVATE_NAME, "DRS", None)

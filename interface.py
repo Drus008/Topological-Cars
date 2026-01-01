@@ -339,7 +339,7 @@ def startGame():
     if rivalId:
         rivalId = rivalId[0]
         if rivalId>1:
-            parameters["rival"] = racers[-2]["name"]
+            parameters["rival"] = racers[rivalId-2]["name"]
         else:
             parameters["rival"] = None  
     else:

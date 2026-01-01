@@ -114,7 +114,7 @@ class topologicalLine(topologicalObject):
     """
     Represents a line on a topological canvas.
     """
-    def __init__(self, TCanvas:topologicalCanvas, pInitial: np.array, pFinal: np.array, tags: list[str] = [], zIndex = 0)-> int:
+    def __init__(self, TCanvas:topologicalCanvas, pInitial: np.array, pFinal: np.array, color:str="black", tags: list[str] = [], zIndex = 0)-> int:
         """
         Creates a line on the topological space.
 
@@ -122,6 +122,7 @@ class topologicalLine(topologicalObject):
             TCanvas (topologicalCanvas): The topological canvas where the line will live.
             pInitial (np.array): The initial point of the line on the original space.
             pFinal (np.array): The final point of the line on the original space.
+            color (str): The color of the line.
             tags (list[str]): Tags assigned to the object of the canvas.
 
         Returns:
@@ -138,10 +139,31 @@ class topologicalLine(topologicalObject):
         for r in range(6):
             idRow = []
             for c in range(6):
-                idRow.append(TCanvas.canvas.create_line(initialPoints[r][c][0], initialPoints[r][c][1], finalPoints[r][c][0], finalPoints[r][c][1], tags=tags))
+                idRow.append(TCanvas.canvas.create_line(initialPoints[r][c][0], initialPoints[r][c][1], finalPoints[r][c][0], finalPoints[r][c][1], fill=color, tags=tags))
             idMatrix.append(idRow)
         position = (initialPoints[0][0]+finalPoints[0][0])/2
         super().__init__(idMatrix,tags[-1], TCanvas, position[0], position[1], zIndex=zIndex)
+
+class topologicalCurve():
+    """
+    Represents a curve on a topological canvas.
+    """
+    def __init__(self, TCanvas:topologicalCanvas, points: list[np.array], color:str = "black", tags: list[str] = [], zIndex = 0):
+        """
+        Creates a curve on the topological space.
+
+        Args:
+            TCanvas (topologicalCanvas): The topological canvas where the line will live.
+            points (list[array]): List of points of the curve.
+            color (str): The color of the line.
+            tags (list[str]): Tags assigned to the object of the canvas.
+        """
+        tags.append("Tid"+str(TCanvas.nElements))
+        TCanvas.nElements = TCanvas.nElements+1
+
+        self.segments = []
+        for p in range(len(points)-1):
+            self.segments.append(topologicalLine(TCanvas, points[p], points[p+1], color))
 
 
 class topologicalPolygon(topologicalObject):
@@ -353,7 +375,6 @@ class topologicalThickCurve(topologicalPolygon):
         self.nPoints = len(points)
         
         if len(amplitude)==1:
-            print("YES")
             self.amplitudes = []
             for _ in range(self.nPoints):
                 self.amplitudes.append(amplitude[0])
