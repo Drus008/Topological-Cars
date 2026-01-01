@@ -65,6 +65,7 @@ class finishLine():
         nSquare = 0
 
         amplitude = self.curve.amplitudes[0]
+        nSquare = int(np.ceil(amplitude/squareSide))
         while(nSquare*squareSide<amplitude):
             nSquare = nSquare+1
             
@@ -136,9 +137,10 @@ class finishLine():
         """Updates all the necessary things."""
         if self.counting:
             self.time = time() - self.startTime
+            self.updateRecord()
         if self.rival:
             self.rival.update()
-        self.updateRecord()
+        
         self.checkLaps()
 
 
@@ -179,8 +181,9 @@ class rival(topologicalPolygon):
             for t in range(self.step,len(self.record)):
                 if self.record[t]["t"]>self.timer.time:
                     self.step = t
-                    displacement = np.array([self.record[t]["x"]-self.position[0],self.record[t]["y"]-self.position[1]])
-                    self.move(displacement[0], displacement[1])
+                    dx = self.record[t]["x"]-self.position[0]
+                    dy = self.record[t]["y"]-self.position[1]
+                    self.move(dx, dy)
                     dAngle = self.record[t]["angle"]-self.angle
                     self.TRotation(dAngle)
                     self.angle = self.record[t]["angle"]

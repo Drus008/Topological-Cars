@@ -25,8 +25,8 @@ class topologicalCanvas():
         canvas (tkinter.Canvas): The canvas used to model the topological space.
         hOrientation (sign): The relation between the orientation of the left and right.
         vOrientation (sign): The relation between the orientation of the top and bottom.
-        dimX (int): Width of the space.
-        dimY (int): Height of the space.
+        dimX (int): Width of the local space.
+        dimY (int): Height of the local space.
         nElements (int): number of elements drawn on the original canvas.
         lastTime (time): The last time the canvas was updated.
         delta (float): The time elapsed between the last frame and the actual one.

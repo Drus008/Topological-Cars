@@ -40,6 +40,9 @@ def selectSpace(interface:Tk, space:str, SIZE:float, extraSIZE: float, visualHel
         Topos = projectivePlane(interface, dimX= SIZE, dimY= SIZE, windowH=windowSize-extraSIZE, windowW=windowSize, visualHelp= visualHelp)
     return Topos
 
+
+from decoration import topologicalDecorationFamily
+
 def configureGame(interface:Tk, space: str, mapName:str, playerName:str, rival:str):
     """Starts a race on the desired map and space.
     Args:
@@ -53,6 +56,8 @@ def configureGame(interface:Tk, space: str, mapName:str, playerName:str, rival:s
     LAYOUT_SIZE = 80
 
     Topos = selectSpace(interface, space, SIZE, LAYOUT_SIZE)
+    d = topologicalDecorationFamily(Topos, 30)
+    d.startCalculations()
     terrain = selectMap(Topos, mapName)
     car = topologicalCar(Topos, x0=20, y0=20, height=20, width=10, ground=terrain, v0x=0, v0y=0)
 
@@ -65,9 +70,10 @@ def configureGame(interface:Tk, space: str, mapName:str, playerName:str, rival:s
         car.TCanvas.updateDelta()
         car.updateCar()
         timer.update()
+        
         Topos.canvas.update()
 
 
 if __name__=="__main__":
     tk = Tk()
-    configureGame(tk, TORUS_PRIVATE_NAME, MAP1_PRIVATE_NAME, "DRS", None)
+    configureGame(tk, RP2_PRIVATE_NAME, MAP1_PRIVATE_NAME, "DRS", None)
