@@ -1,7 +1,7 @@
 import numpy as np
 
 from topologicalCanvas import topologicalCanvas
-from Tmath import rotationMatrix, direcrion2D
+from Tmath import rotationMatrix, direction2D
 
 
 class topologicalObject:
@@ -17,6 +17,11 @@ class topologicalObject:
         objects (List[List[int]]): A matrix where the i,j element is the id of the copy of the original object placed at the canvas i,j.
         zIndex: Used to manage some depth related aspects.
     """
+    # OPTIMIZE Not drawing all the instances of an object would be a huge optimitzation.
+    # Dividing objects in three categories will be the best:
+    # Main objects: The objects that the camera follows. Only needs to draw 9 copies. (Ex: The player)
+    # Static objects: Static objects that dont move. Only needs to draw 16 copies. (Ex: The roads)
+    # Normal objects: Objects that has to be drawn all over the place. (Ex: The rival)
     def __init__(self, instances:list[list[int]], Tid, canvas: topologicalCanvas, x0=0, y0=0, zIndex = 0):
         """
         Creates an object on the topological space.
@@ -44,9 +49,9 @@ class topologicalObject:
         self.position = self.position + np.array([dx,dy])
         for r in range(6):
             for c in range(6):
-                
                 particularId = self.objects[r][c]
-                self.TCanvas.canvas.move(particularId, dx, dy)
+                if particularId:
+                    self.TCanvas.canvas.move(particularId, dx, dy)
                 dy = dy * self.TCanvas.hOrientation
             
             dx = dx*self.TCanvas.vOrientation
@@ -163,7 +168,7 @@ class topologicalCurve():
 
         self.segments = []
         for p in range(len(points)-1):
-            self.segments.append(topologicalLine(TCanvas, points[p], points[p+1], color))
+            self.segments.append(topologicalLine(TCanvas, points[p], points[p+1], color, zIndex=zIndex))
 
 
 class topologicalPolygon(topologicalObject):
@@ -246,12 +251,14 @@ class topologicalPolygon(topologicalObject):
             tPoint = self.TCanvas.topologicalPoint(point[0], point[1])
             for r in range(6):
                 for c in range(6):
-                    rotatedCopies[r][c].append(tPoint[r][c][0])
-                    rotatedCopies[r][c].append(tPoint[r][c][1])
+                    if self.objects[r][c]:
+                        rotatedCopies[r][c].append(tPoint[r][c][0])
+                        rotatedCopies[r][c].append(tPoint[r][c][1])
         for r in range(6):
             for c in range(6):
-                objId = self.objects[r][c]
-                self.TCanvas.canvas.coords(objId, *rotatedCopies[r][c])
+                if self.objects[r][c]:
+                    objId = self.objects[r][c]
+                    self.TCanvas.canvas.coords(objId, *rotatedCopies[r][c])
 
     @classmethod
     def rectangle(cls, TCanvas:topologicalCanvas, center: np.array, hight: float, width:float, angle: float, fill:str="black", tags=[], zIndex=0):
@@ -268,7 +275,7 @@ class topologicalPolygon(topologicalObject):
             tags (list[str]): Tags assigned to the object of the canvas.
             zIndex (float): Its zIndex.
         """
-        vector1 = direcrion2D(angle)
+        vector1 = direction2D(angle)
         vector2 = np.array([vector1[1], -vector1[0]])
         vertex1 = center+(width*vector2 - hight*vector1)/2
         vertex2 = center+(width*vector2 + hight*vector1)/2
@@ -370,7 +377,6 @@ class topologicalThickCurve(topologicalPolygon):
             fill (str): The interior color of the curve. It supports all the colors from tkinter.
             tags (list[str]): Tags assigned to the object of the canvas.
             zIndex (float): Its zIndex.
-            
         """
         self.nPoints = len(points)
         

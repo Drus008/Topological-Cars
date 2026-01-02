@@ -184,6 +184,7 @@ class decoration:
 class decorationFamily:
     """The background animation.
     The idea is that it spawns random polygons that move randomly and hide in the background, apearing when explicited."""
+    # OPTIMIZE This could manage all the variables with np instead of using the decoration class.
     def __init__(self, canvas: Canvas, number: int, decSize = 30, minX=0, maxX=None, minY=0, maxY=None):
         canvas.update()
         if not maxX:

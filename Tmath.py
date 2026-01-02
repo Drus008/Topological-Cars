@@ -16,7 +16,7 @@ def rotationMatrix(rads:float)->array:
     c = cos(rads)
     return array([[c, -s], [s, c]])
 
-def direcrion2D(angle:float)->array:
+def direction2D(angle:float)->array:
     """
     Given an angle, it returns its direction.
     

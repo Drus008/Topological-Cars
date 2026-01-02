@@ -5,7 +5,7 @@ import numpy as np
 from topologicalObjects import topologicalThickCurve, topologicalPolygon
 from fielesManager import saveRecord, loadRecord
 from topologicalCar import topologicalCar
-from Tmath import direcrion2D
+from Tmath import direction2D
 from constants import *
 
 class finishLine():
@@ -93,7 +93,7 @@ class finishLine():
     def placeCarBehindFinishLine(self, distance: int = 30):
         """Places de car just behind th finish line"""
         displacement = self.hitbox.position - self.car.body.position
-        displacement = displacement - distance*direcrion2D(self.angle)
+        displacement = displacement - distance*direction2D(self.angle)
         self.car.body.move(*displacement)
         self.car.body.TRotation(self.angle-self.car.angle)
         self.car.angle = self.angle

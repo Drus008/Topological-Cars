@@ -4,7 +4,7 @@ import numpy as np
 from topologicalObjects import topologicalPolygon
 from topologicalCanvas import topologicalCanvas
 from topologicalTerrain import terrainManager
-from Tmath import direcrion2D
+from Tmath import direction2D
 from constants import *
 
 class topologicalCar():
@@ -44,14 +44,12 @@ class topologicalCar():
             A topological car.
         """
 
-        #self.aeroCoef = 1
-        #self.wheelGreep = 1
-
         self.TCanvas = TCanvas
         self.body = topologicalPolygon(TCanvas, [np.array([x0-width/2,y0-height/2]), np.array([x0+width/2,y0-height/2]), np.array([x0+width/2,y0+height/2]), np.array([x0-width/2,y0+height/2])], fill=color, tags=["topologicalCar"])
         self.ground = ground
         
         self.v = np.array([v0x, v0y], float)
+        self.speed = 0
         self.a = acc
         self.angle = pi/2
         self.momentum = 0
@@ -68,13 +66,13 @@ class topologicalCar():
         self.calcAcc()
         self.keyboardManagment()
         self.updatePosition()
-        self.centerCamara()
+        self.centerCamera()
     
     def getPosition(self)->np.array:
         """Returns the position of the car."""
         return self.body.position
     
-    def centerCamara(self)->None:
+    def centerCamera(self)->None:
         """Centers the camera on the car."""
         self.TCanvas.setCamaraPosition(*self.getPosition())
 
@@ -83,37 +81,37 @@ class topologicalCar():
         Updates the car's global position based on its speed.
         """
 
-        delta = self.TCanvas.delta
-
-        displacement =self.v*delta
+        displacement =self.v*self.TCanvas.getDelta()
         self.body.TMove(*displacement)
     
 
     def calcAcc(self)->None:
         """Computes the acceleration of the car (based on terrain, friction, power...) and updates its speed and angle."""
         torque = 0
+        dt = self.TCanvas.getDelta()
         if self.TCanvas.keyStates["s"]:
             torque = -0.1
         elif self.TCanvas.keyStates["w"]:
-            self.momentum = self.momentum + self.TCanvas.delta
+            self.momentum += dt
             torque = 1-np.exp(-self.momentum/5-0.2)
         else:
             if self.momentum>0:
-                self.momentum = self.momentum - self.TCanvas.delta*3
+                self.momentum -= dt*3
         
         
         AIR_FRICTION = 1
         GROUND_FRICTION, GRIP, TRACTION = self.ground.getFriction(self.body.position)
 
-        tangDirection = direcrion2D(self.angle)
+        tangDirection = direction2D(self.angle)
         perpDirection = np.array((tangDirection[1], -tangDirection[0]))
         acc = tangDirection*self.a*TRACTION*torque
-        acc = acc - self.v*AIR_FRICTION
-        acc = acc - (np.sign(np.dot(self.v,tangDirection)))*tangDirection*GROUND_FRICTION
-        speedCoef = np.exp(-np.linalg.norm(self.v)/250)
-        acc = acc - speedCoef*GRIP*np.dot(self.v,perpDirection)*perpDirection
+        acc -=  self.v*AIR_FRICTION
+        acc -=  (np.sign(np.dot(self.v,tangDirection)))*tangDirection*GROUND_FRICTION
+        speedCoef = np.exp(-self.speed/250)
+        acc -= speedCoef*GRIP*np.dot(self.v,perpDirection)*perpDirection
         
-        self.v = self.v + acc*self.TCanvas.delta
+        self.v += acc*dt
+        self.speed = np.linalg.norm(self.v)
         
     def rotateCar(self, sign)->None:
         """
@@ -124,13 +122,13 @@ class topologicalCar():
         """
         orientation = -sign
 
-        if np.dot(self.v,direcrion2D(self.angle))<0:
+        if np.dot(self.v,direction2D(self.angle))<0:
             orientation = -orientation
-        delta = self.TCanvas.delta
+        dt = self.TCanvas.getDelta()
                                                     #TODO the 0.1 is completely arbitrary
-        turnCoef = (1-np.exp(-np.linalg.norm(self.v))**.1) #Don't allow the car to turn when its speed is low.
-        angle = orientation*delta*self.angVel*turnCoef 
-        self.angle = self.angle+angle
+        turnCoef = (1-np.exp(-self.speed)**.1) #Don't allow the car to turn when its speed is low.
+        angle = orientation*dt*self.angVel*turnCoef 
+        self.angle += angle
         self.body.TRotation(angle)
 
     def keyboardManagment(self)->None:

@@ -112,7 +112,7 @@ class topologicalCanvas():
     
     
     def reflectedPoint(self, point:np.array)->np.array:
-        """Given the coordinates of a point, returns its local coordinates."""
+        """Given the normal coordinates of a point, returns its local coordinates."""
         newX=point[0]%self.dimX
         newY=point[1]%self.dimY
         #This could be optimized if needed
@@ -159,6 +159,9 @@ class topologicalCanvas():
         newTime = time.perf_counter()
         self.delta = newTime - self.lastTime
         self.lastTime = newTime
+    
+    def getDelta(self)->float:
+        return self.delta
     
     def getCamaraPosition(self)->np.array:
         """Returns the global position of the camera on the canvas"""
