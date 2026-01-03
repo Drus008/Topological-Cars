@@ -8,6 +8,8 @@ from constants import *
 
 USER_DIR = Path.home() / "TopologicalRacing" / "Maps"
 
+
+
 def checkFolders():
     """Checks if all the folders are created and creates them if they aren't created."""
     for map in MAPS:
@@ -67,6 +69,8 @@ def loadImage(iconName: str)->Image.Image:
     imgPath = resourcePath(imgShortPath)
     return Image.open(imgPath)
 
+def getSoundDir(soundName: str)->Path:
+    return resourcePath("")/"resources" / "sounds" / (soundName + ".wav")
 
 def resourcePath(relativePath):
     """Returns the absolute path (works for both compiled and interpreted)."""

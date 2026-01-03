@@ -414,7 +414,6 @@ class topologicalThickCurve(topologicalPolygon):
         amplitudes = self.amplitudes
         offset1 = []
         offset2 = []
-        tangent = curve[1]-curve[0]
 
         for i in range(len(curve)-1):
             tangent = curve[i+1]-curve[i]
@@ -423,9 +422,9 @@ class topologicalThickCurve(topologicalPolygon):
             offset1.append(curve[i]+orto)
             offset2.append(curve[i]-orto)
         orto = np.array([-tangent[1], tangent[0]])
-        orto = 0.5*amplitudes[i]*orto/np.linalg.norm(orto)
-        offset1.append(curve[i]+orto)
-        offset2.append(curve[i]-orto)
+        orto = 0.5*amplitudes[-1]*orto/np.linalg.norm(orto)
+        offset1.append(curve[-1]+orto)
+        offset2.append(curve[-1]-orto)
         return [offset1,offset2]
     
     def getStart(self)->np.ndarray:

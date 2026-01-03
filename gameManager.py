@@ -22,6 +22,8 @@ def selectMap(TCanvas: topologicalCanvas, map:str)->terrainManager:
     """
     if map==MAP1_PRIVATE_NAME:
         return topologicalPseudoCircle(TCanvas)
+    if map==MAP2_PRIVATE_NAME:
+        return ZHomology(TCanvas)
 
 def selectSpace(interface:Tk, space:str, SIZE:float, extraSIZE: float, visualHelp:bool =False)->topologicalCanvas:
     """Returns a topological space.

@@ -45,11 +45,12 @@ To open the menu you have to execute the `main.py` file.
 
 #### Controls
 | Key | Action |
-| :--- | :--- |
+| :---: | :--- |
 | `W` | Accelerate |
 | `S` | Reverse |
 | `A` | Turn Left |
 | `D` | Turn Right |
+| `ESC` | Return to the Title Menu |
 
 
 #### Saves
@@ -67,3 +68,7 @@ I would love to add some aesthetic components to improve the game feel, but `tki
 - `numpy`
 - `colormath`
 - `PIL`
+
+## Credits
+
+Author: Drus Sentís Cahué (Drus008)

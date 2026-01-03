@@ -102,7 +102,7 @@ class topologicalCar():
         elif self.TCanvas.keyStates["w"]:
             if momentum<30:
                 self.momentum += dt
-                torque = 1-1/(momentum/5+1.2)
+            torque = 1-1/(momentum/5+1.2)
         else:
             if momentum>0:
                 self.momentum -= dt*3
@@ -135,7 +135,7 @@ class topologicalCar():
             orientation = -orientation
         dt = self.TCanvas.getDelta()
                                                     #TODO the 0.1 is completely arbitrary
-        turnCoef = (1-1/(self.speed+1)**.1) #Don't allow the car to turn when its speed is low.
+        turnCoef = (1-1/(self.speed+1)**.2) #Don't allow the car to turn when its speed is low.
         angle = orientation*dt*self.angVel*turnCoef 
         self.angle += angle
         self.body.TRotation(angle)

@@ -6,11 +6,11 @@ from constants import *
 
 
 class topologicalRoad():
-    def __init__(self, TCanvas: topologicalCanvas, pointsList: list[np.ndarray], amplitude: float):
+    def __init__(self, TCanvas: topologicalCanvas, pointsList: list[np.ndarray], amplitude: float, zIndex=0):
         self.TCanvas = TCanvas
-        self.road = topologicalThickCurve(TCanvas, pointsList, [amplitude], fill=BGCOLOR_2)
-        self.line1 = topologicalCurve(TCanvas, self.road.offset1, color=DETAILS_COLOR)
-        self.line2 = topologicalCurve(TCanvas, self.road.offset2, color=DETAILS_COLOR)
+        self.road = topologicalThickCurve(TCanvas, pointsList, [amplitude], fill=BGCOLOR_2, zIndex=zIndex)
+        self.line1 = topologicalCurve(TCanvas, self.road.offset1, color=DETAILS_COLOR, zIndex=zIndex)
+        self.line2 = topologicalCurve(TCanvas, self.road.offset2, color=DETAILS_COLOR, zIndex=zIndex)
         
 
 
@@ -74,7 +74,7 @@ def topologicalPseudoCircle(TCanvas:topologicalCanvas)->terrainManager:
     radius = 1/2
     precision = 42
 
-    halfCircle1 = [radius*np.array([x*np.sin(np.pi*alfa/((precision)*2-4)),y*np.cos(np.pi*alfa/((precision)*2-4))]) for alfa in range(precision)]
+    halfCircle1 = [radius*np.array([x*np.sin(np.pi*alpha/((precision)*2-4)),y*np.cos(np.pi*alpha/((precision)*2-4))]) for alpha in range(precision)]
     halfCircle2 = [np.array([x,y])-point for point in halfCircle1]
     road1 = topologicalRoad(TCanvas, halfCircle1, thickness)
     road2 = topologicalRoad(TCanvas, halfCircle2, thickness)
@@ -84,3 +84,92 @@ def topologicalPseudoCircle(TCanvas:topologicalCanvas)->terrainManager:
     terrain.addTerrain(road1.road, 5, 10, 12)
     terrain.addTerrain(road2.road, 5, 10, 12)
     return terrain
+
+def ZHomology(TCanvas:topologicalCanvas) -> terrainManager:
+    x = TCanvas.dimX
+    y = TCanvas.dimY
+    thickness = 50
+    
+    semiCirclePrecision = 20
+    semiCircleRadius = x/6
+    lin = np.linspace(0, 1, semiCirclePrecision)
+    angles = lin*lin*(3-2*lin)
+    s = 0.7
+    angles = (lin*(1-s)+s*angles)*np.pi
+    xCoords = semiCircleRadius*np.cos(angles)+x/2
+    yCoords = -semiCircleRadius*np.sin(angles)+y
+    semiCircle = np.column_stack((xCoords, yCoords))
+    TsemiCircle = topologicalRoad(TCanvas, semiCircle, thickness)
+
+
+    linePrecision = 10
+    startPointLineL = np.array([x/3, y/2])
+    endPointLineL = np.array([x/3, 0])
+    lineL = np.linspace(startPointLineL, endPointLineL, linePrecision)
+    TlineL = topologicalRoad(TCanvas, lineL, thickness)
+
+    startPointLineR = np.array([2*x/3, y/2])
+    endPointLineR = np.array([2*x/3, 0])
+    lineR = np.linspace(startPointLineR, endPointLineR, 10)
+    TlineR = topologicalRoad(TCanvas, lineR, thickness)
+
+    sigmoidPrecision = 15
+    sigmoid = lambda x: 1/(1+np.exp(-x))
+    ySigmoid = np.linspace(y/2, y+1, sigmoidPrecision)
+    xSigmoidR = sigmoid(np.linspace(-6, 6, sigmoidPrecision))*x/6+2*x/3
+    sigmoidR = np.column_stack((xSigmoidR, ySigmoid))
+    TSigmoidR = topologicalRoad(TCanvas, sigmoidR, thickness)
+
+    xSigmoidL = x-xSigmoidR
+    sigmoidL = np.column_stack((xSigmoidL, ySigmoid))
+    TSigmoidL = topologicalRoad(TCanvas, sigmoidL, thickness)
+
+    quarterCirclesPrecision = 17
+    angles = -(1-(1-np.linspace(0, 1, quarterCirclesPrecision))**2)*np.pi/2
+    xQuarterCircleL = np.cos(angles)*y/6
+    xQuarterCircleR = x-xQuarterCircleL
+    yQuarterCircleL = np.sin(angles)
+
+    smallQuarterCircleRadius = y/3
+    yQuarterCircleSmallL = -yQuarterCircleL*smallQuarterCircleRadius
+    yQuarterCircleSmallR = yQuarterCircleSmallL
+
+    quarterCircleSmallL = np.column_stack((xQuarterCircleL, yQuarterCircleSmallL))
+    TquarterCircleSmallL = topologicalRoad(TCanvas, quarterCircleSmallL, thickness)
+    quarterCircleSmallR = np.column_stack((xQuarterCircleR, yQuarterCircleSmallR))
+    TquarterCircleSmallR = topologicalRoad(TCanvas, quarterCircleSmallR, thickness)
+
+    bigQuarterCircleRadius = y-smallQuarterCircleRadius
+    yQuarterCircleBigL = -yQuarterCircleL*bigQuarterCircleRadius
+    yQuarterCircleBigR = yQuarterCircleBigL
+
+    quarterCircleBigL = np.column_stack((xQuarterCircleL, yQuarterCircleBigL))
+    TquarterCircleBigL = topologicalRoad(TCanvas, quarterCircleBigL, thickness)
+    quarterCircleBigR = np.column_stack((xQuarterCircleR, yQuarterCircleBigR))
+    TquarterCircleBigR = topologicalRoad(TCanvas, quarterCircleBigR, thickness)
+
+
+    terrain = terrainManager(TCanvas, 60, 8, 5)
+    terrain.addTerrain(TsemiCircle.road, 5, 10, 12)
+    terrain.addTerrain(TlineL.road, 5, 10, 12)
+    terrain.addTerrain(TlineR.road, 5, 10, 12)
+    terrain.addTerrain(TSigmoidL.road, 5, 10, 12)
+    terrain.addTerrain(TSigmoidR.road, 5, 10, 12)
+    terrain.addTerrain(TquarterCircleBigL.road, 5, 10, 12)
+    terrain.addTerrain(TquarterCircleBigR.road, 5, 10, 12)
+    terrain.addTerrain(TquarterCircleSmallL.road, 5, 10, 12)
+    terrain.addTerrain(TquarterCircleSmallR.road, 5, 10, 12)
+
+    return terrain
+
+
+if __name__=="__main__":
+    from tkinter import Tk
+    tk = Tk()
+    TCanvas = topologicalCanvas(tk, 1, 1, dimX=750, dimY=750, visualHelp=True)
+    ZHomology(TCanvas)
+    
+
+    tk.mainloop()
+
+

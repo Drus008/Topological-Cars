@@ -2,9 +2,10 @@ from tkinter import Tk, Label, Button, Frame, Listbox, Entry, Canvas
 from functools import partial
 from PIL import ImageTk
 import tkinter as tk
+import winsound
 
 
-from filesManager import checkFolders, getRecords, loadImage
+from filesManager import getRecords, loadImage, getSoundDir
 from transitions import beginGame
 from constants import *
 
@@ -46,6 +47,7 @@ def createInterface(main:Tk):
 
     def changeSelection(index: int, options: list, e):
         selectedIndex = options[-1].get()
+        winsound.PlaySound(getSoundDir("hover"), winsound.SND_FILENAME | winsound.SND_ASYNC)
         if selectedIndex!=-1:
             options[selectedIndex]["button"].config(image=options[selectedIndex]["img"])
         options[-1].set(index)
@@ -68,8 +70,6 @@ def createInterface(main:Tk):
     main.bind("<Button-1>", offFocus)
 
 
-    #main.resizable(False, False)
-    main.title(GAME_NAME)
     mainCanvas = Canvas(bg=BGCOLOR)
     mainCanvas.pack(expand=True, fill="both")
 
