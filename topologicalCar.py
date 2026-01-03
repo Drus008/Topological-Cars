@@ -12,36 +12,36 @@ class topologicalCar():
     A car that moves within a topological canvas.
 
     Attributes:
-        TCanvas (topologicalCanvas): The topological canvas where the car will be placed.
-        body (topologicalPolygon): The rectangle that represents the car on the canvas.
-        ground (terrainManager): The terrain on which the car will move.
+        TCanvas (topologicalCanvas): The topological canvas where the car is placed.
+        body (topologicalPolygon): The rectangle representing the car on the canvas.
+        ground (terrainManager): The terrain on which the car moves.
         v (array): The velocity vector of the car.
         acc (float): The acceleration of the car.
-        angle (float): The angle at which the car is looking.
+        angle (float): The angle at which the car is oriented.
         width (float): The width of the car.
         height (float): The height of the car.
         angVel (float): The speed at which the car turns.
     """
 
-    def __init__(self, TCanvas: topologicalCanvas, ground:terrainManager, x0:float, y0:float, height:float, width:float, color=MAINCOLOR, acc=15, v0x = 0, v0y=0,rotationSpeed = 1):
+    def __init__(self, TCanvas: topologicalCanvas, ground:terrainManager, x0:float, y0:float, height:float, width:float, color=MAINCOLOR, acc=16, v0x = 0, v0y=0,rotationSpeed = 1):
         
         """
-        Initializes the car given the basic parameters.
+        Initializes the car with the given parameters.
 
         Args:
-            TCanvas (topologicalCanvas): The topological canvas where the car will be placed.
-            ground (terrainManager): The terrain on which the car will move.
-            x0 (float): The x coordinate where the car is placed.
-            y0 (float): The y coordinate where the car is placed.
+            TCanvas (topologicalCanvas): The topological canvas where the car is placed.
+            ground (terrainManager): The terrain on which the car moves.
+            x0 (float): The x-coordinate where the car is placed.
+            y0 (float): The y-coordinate where the car is placed.
             height (float): The height of the car.
             width (float): The width of the car.
-            color (str): The color of the car. It supports all the tkinter colors.
+            color (str): The color of the car. Supports all tkinter colors.
             acc (float): The acceleration of the car.
             v0x (float): The initial velocity on the x-axis.
             v0y (float): The initial velocity on the y-axis.
             rotationSpeed (float): The speed at which the car turns.
         Returns:
-            A topological car.
+            A topological car instance.
         """
 
         self.TCanvas = TCanvas
@@ -61,24 +61,29 @@ class topologicalCar():
     
     def updateCar(self)->None:
         """
-        Manages the car updates on each frame. (It has to be called).
+        Updates the car's state on each frame. This method must be called regularly.
         """
         self.calcAcc()
         self.keyboardManagment()
         self.updatePosition()
         self.centerCamera()
+        self.body.Traise()
     
-    def getPosition(self)->np.array:
-        """Returns the position of the car."""
+    def getPosition(self)->np.ndarray:
+        """
+        Returns the current position of the car.
+        """
         return self.body.position
     
     def centerCamera(self)->None:
-        """Centers the camera on the car."""
+        """
+        Centers the camera on the car's position.
+        """
         self.TCanvas.setCamaraPosition(*self.getPosition())
 
     def updatePosition(self)->None:
         """
-        Updates the car's global position based on its speed.
+        Updates the car's global position based on its velocity.
         """
 
         displacement =self.v*self.TCanvas.getDelta()
@@ -86,16 +91,20 @@ class topologicalCar():
     
 
     def calcAcc(self)->None:
-        """Computes the acceleration of the car (based on terrain, friction, power...) and updates its speed and angle."""
+        """
+        Computes the car's acceleration based on terrain, friction, and power, and updates its speed and angle.
+        """
         torque = 0
         dt = self.TCanvas.getDelta()
+        momentum = self.momentum
         if self.TCanvas.keyStates["s"]:
             torque = -0.1
         elif self.TCanvas.keyStates["w"]:
-            self.momentum += dt
-            torque = 1-np.exp(-self.momentum/5-0.2)
+            if momentum<30:
+                self.momentum += dt
+                torque = 1-1/(momentum/5+1.2)
         else:
-            if self.momentum>0:
+            if momentum>0:
                 self.momentum -= dt*3
         
         
@@ -105,20 +114,20 @@ class topologicalCar():
         tangDirection = direction2D(self.angle)
         perpDirection = np.array((tangDirection[1], -tangDirection[0]))
         acc = tangDirection*self.a*TRACTION*torque
-        acc -=  self.v*AIR_FRICTION
-        acc -=  (np.sign(np.dot(self.v,tangDirection)))*tangDirection*GROUND_FRICTION
-        speedCoef = np.exp(-self.speed/250)
-        acc -= speedCoef*GRIP*np.dot(self.v,perpDirection)*perpDirection
+        acc -= self.v*AIR_FRICTION
+        acc -= (np.sign(np.dot(self.v,tangDirection)))*tangDirection*GROUND_FRICTION
+        gripCoef = 1/(self.speed/250+1)
+        acc -= gripCoef*GRIP*np.dot(self.v,perpDirection)*perpDirection
         
         self.v += acc*dt
         self.speed = np.linalg.norm(self.v)
         
     def rotateCar(self, sign)->None:
         """
-        Rotates the car to the desired direction.
+        Rotates the car in the specified direction.
 
         Args:
-            sign (sign): The direction of the rotation. Positive means clockwise and negative counterclockwise.
+            sign (int): The direction of rotation. Positive for clockwise, negative for counterclockwise.
         """
         orientation = -sign
 
@@ -126,14 +135,14 @@ class topologicalCar():
             orientation = -orientation
         dt = self.TCanvas.getDelta()
                                                     #TODO the 0.1 is completely arbitrary
-        turnCoef = (1-np.exp(-self.speed)**.1) #Don't allow the car to turn when its speed is low.
+        turnCoef = (1-1/(self.speed+1)**.1) #Don't allow the car to turn when its speed is low.
         angle = orientation*dt*self.angVel*turnCoef 
         self.angle += angle
         self.body.TRotation(angle)
 
     def keyboardManagment(self)->None:
         """
-        Manages how the car interacts with the keyboard inputs.
+        Handles the car's interaction with keyboard inputs.
         """
         if self.TCanvas.keyStates["a"]:
             self.rotateCar(1)

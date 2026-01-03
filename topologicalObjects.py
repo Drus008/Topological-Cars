@@ -1,4 +1,6 @@
+from math import sqrt
 import numpy as np
+
 
 from topologicalCanvas import topologicalCanvas
 from Tmath import rotationMatrix, direction2D
@@ -11,17 +13,12 @@ class topologicalObject:
     By topological object I refer to an object that is duplicated on every individual space with its respective orientation.
     
     Attributes:
-        TCanvas (topologicalCanvas): The topological canvas where the point will be drawn.
-        Tid (str): The id of the element on the topological canvas. It is a string with the format "Tid"+int.
+        TCanvas (topologicalCanvas): The topological canvas where the object is drawn.
+        Tid (str): The ID of the element on the topological canvas. It is a string with the format "Tid"+int.
         position (array): The position where the object is located.
         objects (List[List[int]]): A matrix where the i,j element is the id of the copy of the original object placed at the canvas i,j.
         zIndex: Used to manage some depth related aspects.
     """
-    # OPTIMIZE Not drawing all the instances of an object would be a huge optimitzation.
-    # Dividing objects in three categories will be the best:
-    # Main objects: The objects that the camera follows. Only needs to draw 9 copies. (Ex: The player)
-    # Static objects: Static objects that dont move. Only needs to draw 16 copies. (Ex: The roads)
-    # Normal objects: Objects that has to be drawn all over the place. (Ex: The rival)
     def __init__(self, instances:list[list[int]], Tid, canvas: topologicalCanvas, x0=0, y0=0, zIndex = 0):
         """
         Creates an object on the topological space.
@@ -29,7 +26,7 @@ class topologicalObject:
         Args:
             instances (list[list[int]]): The original id (tkinter) of the element drawn on each local canvas.
             Tid: The topological ID of the object.
-            canvas (topologicalCanvas): The topological canvas where the object will live.
+            canvas (topologicalCanvas): The topological canvas where the object resides.
         """
         self.position = np.array([x0, y0])
         self.Tid = Tid
@@ -40,11 +37,11 @@ class topologicalObject:
 
     def move(self, dx, dy)->None:
         """
-        Moves all the copies of the object the amount specified.
+        Moves all the copies of the object by the specified amount.
 
         Args:
-            dx (float): the displacement on the x direction.
-            dy (float): the displacement on the y direction.
+            dx (float): The displacement in the x direction.
+            dy (float): The displacement in the y direction.
         """
         self.position = self.position + np.array([dx,dy])
         for r in range(6):
@@ -59,7 +56,7 @@ class topologicalObject:
 
     def checkBounds(self)->None:
         """
-        Check if the object is out of its global position and moves it back to its corresponding global space if needed.
+        Checks if the object is out of its global position and moves it back to its corresponding global space if needed.
         """
         x = self.position[0]
         if x<0:
@@ -75,11 +72,11 @@ class topologicalObject:
 
     def TMove(self, dx:float, dy:float)->None:
         """
-        Moves all the copies of the object and teleports it to its global canvas if it moves out of it.
+        Moves all the copies of the object and teleports it to its global canvas if it moves out of bounds.
 
         Args:
-            dx (float): the displacement on the x direction.
-            dy (float): the displacement on the y direction.
+            dx (float): The displacement in the x direction.
+            dy (float): The displacement in the y direction.
         """
         self.move(dx, dy)
         self.checkBounds()
@@ -97,21 +94,32 @@ class topologicalObject:
             for c in range(6):
                 self.TCanvas.canvas.itemconfig(self.objects[r][c], state = "normal")
 
-    def Traise(self)->None:
-        """Moves an object to the front"""
+    def Traise(self) -> None:
+        """
+        Brings the object to the front.
+        """
         for r in range(6):
             for c in range(6):
                 self.TCanvas.canvas.tag_raise(self.objects[r][c])
 
-    def computeDistanceToPoint(self, point:np.array)->float:
-        """Compues the distance between a global point and the object"""
+    def computeDistanceToPoint(self, point: np.ndarray) -> float:
+        """
+        Computes the distance between a global point and the object.
+
+        Args:
+            point (array): The global point to compute the distance to.
+
+        Returns:
+            float: The distance to the point.
+        """
         points = self.TCanvas.topologicalPoint(*self.TCanvas.reflectedPoint(point))
         objectCoodinates = self.position + 2*np.array([self.TCanvas.dimX, self.TCanvas.dimY])
         distances = []
         for r in range(6):
             for c in range(6):
-                distances.append(np.linalg.norm(points[r][c]-objectCoodinates))
-        return min(distances)
+                vec = points[r][c]-objectCoodinates
+                distances.append(np.dot(vec,vec))
+        return sqrt(min(distances))
         
 
 
@@ -119,16 +127,16 @@ class topologicalLine(topologicalObject):
     """
     Represents a line on a topological canvas.
     """
-    def __init__(self, TCanvas:topologicalCanvas, pInitial: np.array, pFinal: np.array, color:str="black", tags: list[str] = [], zIndex = 0)-> int:
+    def __init__(self, TCanvas:topologicalCanvas, pInitial: np.ndarray, pFinal: np.ndarray, color:str="black", tags: list[str] = [], zIndex = 0):
         """
         Creates a line on the topological space.
 
         Args:
-            TCanvas (topologicalCanvas): The topological canvas where the line will live.
-            pInitial (np.array): The initial point of the line on the original space.
-            pFinal (np.array): The final point of the line on the original space.
+            TCanvas (topologicalCanvas): The topological canvas where the line resides.
+            pInitial (array): The initial point of the line in the original space.
+            pFinal (array): The final point of the line in the original space.
             color (str): The color of the line.
-            tags (list[str]): Tags assigned to the object of the canvas.
+            tags (list[str]): Tags assigned to the object on the canvas.
 
         Returns:
             The topological ID of the line.
@@ -153,15 +161,15 @@ class topologicalCurve():
     """
     Represents a curve on a topological canvas.
     """
-    def __init__(self, TCanvas:topologicalCanvas, points: list[np.array], color:str = "black", tags: list[str] = [], zIndex = 0):
+    def __init__(self, TCanvas:topologicalCanvas, points: list[np.ndarray], color:str = "black", tags: list[str] = [], zIndex = 0):
         """
         Creates a curve on the topological space.
 
         Args:
-            TCanvas (topologicalCanvas): The topological canvas where the line will live.
-            points (list[array]): List of points of the curve.
-            color (str): The color of the line.
-            tags (list[str]): Tags assigned to the object of the canvas.
+            TCanvas (topologicalCanvas): The topological canvas where the curve resides.
+            points (list[array]): List of points defining the curve.
+            color (str): The color of the curve.
+            tags (list[str]): Tags assigned to the object on the canvas.
         """
         tags.append("Tid"+str(TCanvas.nElements))
         TCanvas.nElements = TCanvas.nElements+1
@@ -180,16 +188,16 @@ class topologicalPolygon(topologicalObject):
         localVertices (list[array]): A list of the local coordinates of the vertices of the polygon.
 
     """
-    def __init__(self, TCanvas:topologicalCanvas, pointList: list[np.array], fill:str="black", tags = [], zIndex = 0)-> int:
+    def __init__(self, TCanvas:topologicalCanvas, pointList: list[np.ndarray], fill:str="black", tags = [], zIndex = 0):
         """
         Creates a polygon on the topological space.
 
         Args:
-            TCanvas (topologicalCanvas): The topological canvas where the line will live.
-            pointList (list[np.array]): A list of 2D arrays that represents the coordinates of edges of the polygon
-            fill (str): The interior color of the polygon. It supports all the colors from tkinter.
-            tags (list[str]): Tags assigned to the object of the canvas.
-            zIndex (float): Its zIndex.
+            TCanvas (topologicalCanvas): The topological canvas where the polygon resides.
+            pointList (list[array]): A list of 2D arrays representing the coordinates of the polygon's edges.
+            fill (str): The interior color of the polygon. Supports all tkinter colors.
+            tags (list[str]): Tags assigned to the object on the canvas.
+            zIndex (float): The zIndex of the polygon.
 
         Returns:
             The topological ID of the polygon.
@@ -406,17 +414,23 @@ class topologicalThickCurve(topologicalPolygon):
         amplitudes = self.amplitudes
         offset1 = []
         offset2 = []
+        tangent = curve[1]-curve[0]
+
         for i in range(len(curve)-1):
             tangent = curve[i+1]-curve[i]
             orto = np.array([-tangent[1], tangent[0]])
             orto = 0.5*amplitudes[i]*orto/np.linalg.norm(orto)
             offset1.append(curve[i]+orto)
             offset2.append(curve[i]-orto)
+        orto = np.array([-tangent[1], tangent[0]])
+        orto = 0.5*amplitudes[i]*orto/np.linalg.norm(orto)
+        offset1.append(curve[i]+orto)
+        offset2.append(curve[i]-orto)
         return [offset1,offset2]
     
-    def getStart(self)->np.array:
+    def getStart(self)->np.ndarray:
         """Returns the start of the curve, precisely it returns the first point of each offset"""
-        return np.array([self.offset1[0], self.offset2[0]])
+        return np.ndarray([self.offset1[0], self.offset2[0]])
 
 
 # Useless class.

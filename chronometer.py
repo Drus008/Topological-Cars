@@ -3,7 +3,7 @@ from time import time
 import numpy as np
 
 from topologicalObjects import topologicalThickCurve, topologicalPolygon
-from fielesManager import saveRecord, loadRecord
+from filesManager import saveRecord, loadRecord
 from topologicalCar import topologicalCar
 from Tmath import direction2D
 from constants import *
@@ -15,22 +15,22 @@ class finishLine():
         car (topologicalCar): The car that will be racing.
         size (float): The height of the finish line.
         TOTAL_LAPS (int): The total number of laps that have to be completed to finish the race.
-        laps (int): The number of laps done by the car.
-        active (bool): Represents if the finish line is active, i.e. if the car crosses the line it counts as a lap. This attribute is meant to prevent crossing the finish line and going backwards from counting as one lap.
+        laps (int): The number of laps completed by the car.
+        active (bool): Represents if the finish line is active, i.e., if the car crosses the line, it counts as a lap. This attribute is meant to prevent crossing the finish line and going backward from counting as one lap.
         counting (bool): Represents if the timer is counting.
         startTime (float): The time when the race began (the car crossed the line for the first time).
-        time (float): The time passed from the beginning of the race.
+        time (float): The time passed since the beginning of the race.
         newTrajectory (list[dict]): The record of the trajectory of the car once it starts the race.
         rival (rival): The replay of the loaded rival.
         hitbox (topologicalPolygon): The hitbox of the finish line.
      """
 
-    def __init__(self, curve:topologicalThickCurve, car: topologicalCar, spaceName:str, mapName: str, space: str, playerName:str, rivalName:str=None, size = 20):
+    def __init__(self, curve:topologicalThickCurve, car: topologicalCar, spaceName:str, mapName: str, space: str, playerName:str, rivalName=None, size = 20):
         """Creates the finish line.
         Args:
             curve (topologicalThickCurve): The curve where the finish line will be placed (at the start).
             car (topologicalCar): The car that will be recorded.
-            size (float): The height of the finish line. 
+            size (float): The height of the finish line.
         """
 
         self.TCanvas = curve.TCanvas
@@ -42,7 +42,7 @@ class finishLine():
         self.laps = 0
         self.active = True
         self.counting = False
-        self.startTime = None
+        self.startTime = 0
         self.time = 0
         
         self.playerName = playerName
@@ -53,7 +53,7 @@ class finishLine():
 
         self.placeCarBehindFinishLine()
 
-        self.newTrajectory = [{"x":self.car.body.position[0], "y":self.car.body.position[1], "angle": self.car.angle, "t":0}]
+        self.newTrajectory = [{"x":self.hitbox.position[0], "y":self.hitbox.position[1], "angle": self.car.angle, "t":0}]
         if rivalName:
             self.rival = rival.cloneCar(car, self, rivalName, space, mapName)
         else:
@@ -112,11 +112,8 @@ class finishLine():
                         self.rival.start()
                 elif self.laps==self.TOTAL_LAPS:
                     print("RACE FINISHED", self.time)
-                    saveRecord(self.mapName, self.spaceName, self.playerName, self.newTrajectory) # TODO This has to be done later on, because here it lags
                     self.active=False
                     self.counting = False
-                    if self.rival:
-                        self.rival.stop()
                 self.laps = self.laps + 1
                 self.active = False
         else:
@@ -124,6 +121,11 @@ class finishLine():
             if distance>self.TCanvas.dimX/3:
                 self.active=True
 
+
+
+    def saveRecord(self):
+        if not (self.active and self.counting and self.playerName!=""):
+            saveRecord(self.mapName, self.spaceName, self.playerName, self.newTrajectory)
 
     def updateRecord(self):
         """Updates the record of the playable car."""
@@ -137,7 +139,10 @@ class finishLine():
         """Updates all the necessary things."""
         if self.counting:
             self.time = time() - self.startTime
-            self.updateRecord()
+            if self.time>600: #Don't save if it last more than 10 min
+                self.playerName = ""
+            if self.playerName!="":
+                self.updateRecord()
         if self.rival:
             self.rival.update()
         
@@ -149,7 +154,7 @@ class rival(topologicalPolygon):
     """Emulates a car following a given trajectory.
     Attributes:
         timer (finishLine): The finishLine that manages the records.
-        trajectory (list[dict]): A list of times, positions and angles of the car.
+        trajectory (list[dict]): A list of times, positions, and angles of the car.
         step (int): The index of the trajectory list that the clone is at right now.
     """
 
@@ -157,7 +162,7 @@ class rival(topologicalPolygon):
     def cloneCar(cls, car:topologicalCar, timer:finishLine, rivalName:str, space:str, map:str):
         """Clones a given car and sets it up to race."""
 
-        rival = super().rectangle(car.TCanvas, car.body.position, car.height, car.width, timer.angle, fill="red")
+        rival = super().rectangle(car.TCanvas, car.body.position, car.height, car.width, timer.angle, fill=MAINCOLOR_DARK)
         rival.timer = timer
 
         rival.trajectory = []
@@ -165,6 +170,7 @@ class rival(topologicalPolygon):
         rival.step = 0
         rival.hide()
         rival.record = loadRecord(space, map, rivalName)
+        rival.position = np.array([rival.record[0]["x"],rival.record[0]["y"]])
         return rival
     
     def start(self):
@@ -178,14 +184,20 @@ class rival(topologicalPolygon):
     def update(self):
         """Updates the clone's position and angle based on the time elapsed and the loaded trajectory."""
         if self.timer.counting:
-            for t in range(self.step,len(self.record)):
+            for t in range(self.step,len(self.record)-1):
                 if self.record[t]["t"]>self.timer.time:
-                    self.step = t
-                    dx = self.record[t]["x"]-self.position[0]
-                    dy = self.record[t]["y"]-self.position[1]
-                    self.move(dx, dy)
-                    dAngle = self.record[t]["angle"]-self.angle
-                    self.TRotation(dAngle)
-                    self.angle = self.record[t]["angle"]
+                    prevPoint = np.array([self.record[t]["x"],self.record[t]["y"]])
+                    nextPoint= np.array([self.record[t+1]["x"],self.record[t+1]["y"]])
+                    distance = nextPoint-prevPoint
+                    if np.dot(distance, distance)<self.TCanvas.dimX*self.TCanvas.dimY:
+                        tInterp = (self.timer.time-self.record[t]["t"])/(self.record[t+1]["t"]-self.record[t]["t"])
+                        self.step = t
+                        prevPoint = np.array([self.record[t]["x"],self.record[t]["y"]])
+                        nextPoint= np.array([self.record[t+1]["x"],self.record[t+1]["y"]])
+                        d = (nextPoint-prevPoint)*tInterp-(self.position-prevPoint)
+                        self.move(d[0], d[1])
+                        dAngle = self.record[t]["angle"]-self.angle
+                        self.TRotation(dAngle)
+                        self.angle = self.record[t]["angle"]
                     
                     break

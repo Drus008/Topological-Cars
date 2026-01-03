@@ -151,35 +151,36 @@ class timeCounter():
 
 
 class layout():
-    """The main layout that shows the speed, the time, the number of laps and the name of the player.
-    
-    Atributes:
-        baner: The frame that contains the panels.
+    """The main layout that shows the speed, the time, the number of laps, and the name of the player.
+
+    Attributes:
+        banner: The frame that contains the panels.
         border: The border of the panel.
         speed (counterPanel): The panel intended to show the speed (3 digits).
         timer (timeCounter): The panel intended to show the time.
         laps (counterPanel): The panel intended to show the number of laps (1 digit).
-        name (charPanelColection): The panel intended to show the name of the player (3 letters).
     """
-    def __init__(self, window: Tk, playerName: str):
-        self.baner = Frame(window, bg=BGCOLOR, height=80)
-        self.baner.pack(side="bottom", fill="x")
-        self.baner.pack_propagate(False)
+    def __init__(self, window: Tk):
+        self.banner = Frame(window, bg=BGCOLOR, height=80)
+        self.banner.pack(side="bottom", fill="x")
+        self.banner.pack_propagate(False)
         self.border = Frame(window, bg="black", height=5)
         self.border.pack(side="bottom", fill="x")
 
-
-        self.speed = counterPanel(self.baner, 3, 23)
+        self.speed = counterPanel(self.banner, 3, 23)
         self.speed.frame.pack(side="left", fill="y", expand=True)
 
-        self.timer = timeCounter(self.baner)
-        self.timer.frame.pack(side="left",fill="y",expand=True)
+        self.timer = timeCounter(self.banner)
+        self.timer.frame.pack(side="left", fill="y", expand=True)
 
-        self.laps = counterPanel(self.baner, 1, 0)
-        self.laps.frame.pack(side="left",fill="y",expand=True)
+        self.laps = counterPanel(self.banner, 1, 0)
+        self.laps.frame.pack(side="left", fill="y", expand=True)
 
-        self.name = charPanelColection(self.baner,3, playerName)
-        self.name.frame.pack(side="left",fill="y",expand=True)
+    def destroy(self) -> None:
+        self.banner.destroy()
+        self.border.destroy()
+    
+
 
 
 

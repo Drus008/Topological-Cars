@@ -6,7 +6,7 @@ from constants import *
 
 
 class topologicalRoad():
-    def __init__(self, TCanvas: topologicalCanvas, pointsList: list[np.array], amplitude: float):
+    def __init__(self, TCanvas: topologicalCanvas, pointsList: list[np.ndarray], amplitude: float):
         self.TCanvas = TCanvas
         self.road = topologicalThickCurve(TCanvas, pointsList, [amplitude], fill=BGCOLOR_2)
         self.line1 = topologicalCurve(TCanvas, self.road.offset1, color=DETAILS_COLOR)
@@ -47,13 +47,13 @@ class terrainManager:
                 return
         self.terrains.append(newTerrain)
         
-    def detectTerrain(self, point:np.array)->str:
+    def detectTerrain(self, point:np.ndarray)->str:
         """Given a point, it returns the TID of the terrain with highest zIndex that contains the point"""
         for terrain in self.terrains:
             if terrain.checkIfPointInside(point):
                 return terrain.Tid
     
-    def getFriction(self, point:np.array)->list[float]:
+    def getFriction(self, point:np.ndarray)->list[float]:
         """Given a point, it returns the friction and grip of the terrain with highest zIndex that contains the point.
         Args:
             point (array): The coordinates of the point.
@@ -72,7 +72,7 @@ def topologicalPseudoCircle(TCanvas:topologicalCanvas)->terrainManager:
     y = TCanvas.dimY
     thickness = 50
     radius = 1/2
-    precision = 25
+    precision = 42
 
     halfCircle1 = [radius*np.array([x*np.sin(np.pi*alfa/((precision)*2-4)),y*np.cos(np.pi*alfa/((precision)*2-4))]) for alfa in range(precision)]
     halfCircle2 = [np.array([x,y])-point for point in halfCircle1]

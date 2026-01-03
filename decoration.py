@@ -5,7 +5,6 @@ from collections import deque
 import numpy as np
 import random
 
-# It would be better to just use a gif :)
 
 from topologicalCanvas import topologicalCanvas
 from constants import *
@@ -13,9 +12,9 @@ from constants import *
 def getLab(hexStr:str)->LabColor:
     """Given a color in hexadecimal format, returns its lab format.
     Args:
-        hexStr (srt): The color in hexadecimal format ("#XXXXXX")
+        hexStr (str): The color in hexadecimal format ("#XXXXXX").
     Returns:
-        The color with LabColor format
+        The color in LabColor format.
     """
     rgb = sRGBColor.new_from_rgb_hex(hexStr)
     return convert_color(rgb, LabColor)
@@ -23,9 +22,9 @@ def getLab(hexStr:str)->LabColor:
 def interpolateLab(color0:str, color1:str, t:float)->str:
     """Returns the color in between two other with a certain proportion.
     Args:
-        color0 (str): The first color. It has to have hex format ("#XXXXXX").
-        color1 (str): The second colorr. It has to have hex format ("#XXXXXX")
-        t (float): A number between 0 and 1 that represents the proportion of color0 (color1 has the remaining 1-t)
+        color0 (str): The first color. It must be in hex format ("#XXXXXX").
+        color1 (str): The second color. It must be in hex format ("#XXXXXX").
+        t (float): A number between 0 and 1 that represents the proportion of color0 (color1 has the remaining 1-t).
     Returns:
         The mix of the two colors.
     """
@@ -55,7 +54,7 @@ class decoration:
     Attributes:
         parent (Canvas): The tk parent.
         color (int): The index of the visible color of the object.
-        lastColor (int): Saves de index of the last color.
+        lastColor (int): Saves the index of the last color.
         nSides (int): The number of sides of the polygon.
         originalPosition (array): The starting position of the decoration. It tends to go there.
         position (array): Its actual position.
@@ -63,13 +62,14 @@ class decoration:
         self.figura (int): The tkinter obkect drawn on the canvas.
     """
     
-    def __init__(self, canvas:Canvas, position:(np.array), vertex:list[np.array], color: int=1):
-        """Initialices a decoration.
+    def __init__(self, canvas:Canvas, position:(np.ndarray), vertex:list[np.ndarray], color: int=1):
+        """Initializes a decoration.
         Args:
-            canvas (Canvas): The partent of the decoration.
-            positon (array): The initial position.
-            vertex (list[np.array]): a list of its vertex.
-            color (int): The index of the color of the object when visible."""
+            canvas (Canvas): The parent of the decoration.
+            position (array): The initial position.
+            vertex (list[array]): A list of its vertices.
+            color (int): The index of the color of the object when visible.
+        """
         self.parent = canvas
         self.color = color
         self.lastColor = -1
@@ -84,13 +84,14 @@ class decoration:
     
 
     @classmethod
-    def random(cls, canvas:Canvas, position:(np.array), figuresSize:float=30, color:int=1):
-        """Initialices a random decoration.
+    def random(cls, canvas:Canvas, position:(np.ndarray), figuresSize:float=30, color:int=1):
+        """Initializes a random decoration.
         Args:
-            canvas (Canvas): The partent of the decoration.
-            positon (array): The initial position.
-            figureSize (float): The maximum lenght of a side.
-            color (str): The hex color of the object when visible."""
+            canvas (Canvas): The parent of the decoration.
+            position (array): The initial position.
+            figuresSize (float): The maximum length of a side.
+            color (int): The index of the color of the object when visible.
+        """
         nSides = random.randint(3, 5)
         vertex = []
         vertex.append(np.random.rand(2)*figuresSize+position)
@@ -110,26 +111,26 @@ class decoration:
             vertex.append(newSide)
         return cls(canvas, position, vertex, color)
 
-    def computeSpeed(self, delta:float)->np.array:
+    def computeSpeed(self, delta:float)->np.ndarray:
         """Given the elapsed time, return its change in velocity.
         Args:
-            delta (float): The time elapsed between the last computation.
+            delta (float): The time elapsed since the last computation.
         Returns:
             A vector with the velocity increment."""
         vNorm = abs(self.speed[0])+abs(self.speed[1])
 
         ORIGIN_REPULSION = 10
-        ORIGIN_ATRACTION = 0.1
+        ORIGIN_ATTRACTION = 0.1
         DISPERSION = 500
 
         if vNorm<0.02:
             dv = np.random.normal(scale=DISPERSION*delta, size=2)*ORIGIN_REPULSION
         else:
             d = self.position-self.originalPosition
-            dv = np.random.normal(scale=DISPERSION*delta, size=2) - random.random()*d*ORIGIN_ATRACTION
+            dv = np.random.normal(scale=DISPERSION*delta, size=2) - random.random()*d*ORIGIN_ATTRACTION
         return dv
 
-    def applySpeed(self, dv:np.array, delta:float)->None:
+    def applySpeed(self, dv:np.ndarray, delta:float)->None:
         """Given the time elapsed and the change in speed, it updates its position.
         Args:
             dv (array): The velocity increment.
@@ -141,12 +142,12 @@ class decoration:
         dp = self.speed*delta
         self.position = self.position + dp
         self.parent.move(self.figure, *dp)
-        
-    
-    def changeColor(self, c:float)->None:
-        """Reveals the object a certain amount controled by c.
+
+    def changeColor(self, c: float) -> None:
+        """Reveals the object a certain amount controlled by c.
         Args:
-            c (float): A float between 0 and 1 that controlls the visibility of the decoration. 0->invislible, 1->Totally visible."""
+            c (float): A float between 0 and 1 that controls the visibility of the decoration. 0 -> invisible, 1 -> Totally visible.
+        """
         c = max(0.0, min(1.0, c))
         index = int(c*99)
         if index!=self.lastColor:
@@ -158,7 +159,7 @@ class decoration:
     
     def cloneOriented(self, TCanvas:topologicalCanvas, row: int=0, col: int=0):
         """
-        Creates a copy on the same canvas
+        Creates a copy on the same canvas.
         """
         if row%2==0 and col%2==0:
             new_vertices = [ v.copy() for v in self.vertex]
@@ -183,9 +184,10 @@ class decoration:
 
 class decorationFamily:
     """The background animation.
-    The idea is that it spawns random polygons that move randomly and hide in the background, apearing when explicited."""
-    # OPTIMIZE This could manage all the variables with np instead of using the decoration class.
-    def __init__(self, canvas: Canvas, number: int, decSize = 30, minX=0, maxX=None, minY=0, maxY=None):
+    The idea is that it spawns random polygons that move randomly and hide in the background, appearing when specified.
+    """
+    # OPTIMIZE: This could manage all the variables with np instead of using the decoration class.
+    def __init__(self, canvas: Canvas, number: int, decSize=30, minX=0, maxX=None, minY=0, maxY=None):
         canvas.update()
         if not maxX:
             maxX = canvas.winfo_width()
@@ -200,7 +202,6 @@ class decorationFamily:
 
         self.lastSpeeds = deque([], 10)
 
-        colors = [ALTERNATIVE_COLOR_1, ALTERNATIVE_COLOR_2]
         for _ in range(number):
             correct = False
             while not correct:
@@ -217,16 +218,17 @@ class decorationFamily:
     def moveDecorations(self, delta:float)->None:
         """Moves each decoration.
         Args:
-            delta (float): The time elapsed."""
+            delta (float): The time elapsed.
+        """
         for dec in self.decorations:
             dv = dec.computeSpeed(delta)
             dec.applySpeed(dv, delta)
-    
-    def setColorBasedOnMouse(self)->None:
-        """Sets de visibility of the decorations based on the mouse speed."""
+
+    def setColorBasedOnMouse(self) -> None:
+        """Sets the visibility of the decorations based on the mouse speed."""
         newMouseX = self.parent.winfo_pointerx()
         newMouseY = self.parent.winfo_pointery()
-        c = np.linalg.norm(np.array([newMouseX-self.mouseX, newMouseY-self.mouseY]))/1400
+        c = (abs(newMouseX-self.mouseX)+abs(newMouseY-self.mouseY))/200
         self.lastSpeeds.append(c)
         for dec in self.decorations:
             dec.changeColor(max(self.lastSpeeds))
@@ -242,19 +244,20 @@ class decorationFamily:
             self.moveDecorations(0.01)
             self.parent.after(10, self.startCalculations)
 
-    def computeVelocity(self, delta:float)->list[np.array]:
+    def computeVelocity(self, delta:float)->list[np.ndarray]:
         """Computes the chage in velocity of each decoration.
         Args:
             delta (float): The time elapsed.
             
         Returns:
-            A list with the velocity change of each decoration."""
+            A list with the velocity change of each decoration.
+        """
         changes = []
         for dec in self.decorations:
             changes.append(dec.computeSpeed(delta))
         return changes
     
-    def moveDecorionsPrecisely(self, delta:float, dvList:list[np.array])->None:
+    def moveDecorionsPrecisely(self, delta:float, dvList:list[np.ndarray])->None:
         """Moves each decoration the specified amount.
         Args:
             delta (float): The time elapsed.
@@ -264,12 +267,12 @@ class decorationFamily:
             self.decorations[decId].applySpeed(dvList[decId], delta)
 
     def clone(self, TCanvas: topologicalCanvas, row: int, col: int):
-        """Creates a clone following the geometry of a TCanvas
-        
+        """Creates a clone following the geometry of a TCanvas.
+
         Args:
-            TCanvas (topologicalCanvas): The TCanvas where the family will leave.
+            TCanvas (topologicalCanvas): The TCanvas where the family will live.
             row (int): The corresponding cell row of the TCanvas.
-            col (int): The corresponding cell row of the TCanvas.  
+            col (int): The corresponding cell column of the TCanvas.
         """
 
         newFamily = decorationFamily(self.parent, number=0)
@@ -282,7 +285,7 @@ class decorationFamily:
 
 
 class topologicalDecorationFamily:
-    def __init__(self, TCanvas: topologicalCanvas, number: int, size = 40):
+    def __init__(self, TCanvas: topologicalCanvas, number: int, size = 100):
         self.TCanvas = TCanvas 
         self.instances: list[list[decorationFamily]] = []
         for r in range(6):
@@ -296,7 +299,6 @@ class topologicalDecorationFamily:
             self.instances.append(row)
     
     def moveDecorations(self, delta:float):
-        print(self.TCanvas.delta)
         displacement = self.instances[0][0].computeVelocity(delta)
         orientatorV = np.array([self.TCanvas.vOrientation,1])
         orientatorH = np.array([1, self.TCanvas.hOrientation])

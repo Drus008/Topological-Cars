@@ -41,14 +41,14 @@ def selectSpace(interface:Tk, space:str, SIZE:float, extraSIZE: float, visualHel
     return Topos
 
 
-from decoration import topologicalDecorationFamily
-
 def configureGame(interface:Tk, space: str, mapName:str, playerName:str, rival:str):
     """Starts a race on the desired map and space.
     Args:
         interface (Tk): The parent class.
         space (str): The name of the space. Options: "torus", "klein", "projective".
-        map (str): The name of the map. Options: "pseudo-circle".
+        mapName (str): The name of the map. Options: "pseudo-circle".
+        playerName (str): The name of the player.
+        rival (str): The name of the rival.
     """
 
     
@@ -56,14 +56,15 @@ def configureGame(interface:Tk, space: str, mapName:str, playerName:str, rival:s
     LAYOUT_SIZE = 80
 
     Topos = selectSpace(interface, space, SIZE, LAYOUT_SIZE)
-    d = topologicalDecorationFamily(Topos, 30)
-    d.startCalculations()
+    #d = topologicalDecorationFamily(Topos, 50) #Too slow to work
+    #d.startCalculations()
     terrain = selectMap(Topos, mapName)
     car = topologicalCar(Topos, x0=20, y0=20, height=20, width=10, ground=terrain, v0x=0, v0y=0)
 
     timer = finishLine(terrain.terrains[0], car, spaceName=space, mapName=mapName, space=space, playerName=playerName, rivalName=rival)
-    l = layout(interface, playerName)
-    while(True):
+    l = layout(interface)
+
+    while(not Topos.keyStates["escape"]):
         l.speed.updateNumber(int(np.linalg.norm(car.v)))
         l.timer.showTime(int(timer.time))
         l.laps.updateNumber(timer.laps)
@@ -71,9 +72,16 @@ def configureGame(interface:Tk, space: str, mapName:str, playerName:str, rival:s
         car.updateCar()
         timer.update()
         
+        print(Topos.delta)
+
         Topos.canvas.update()
+    timer.saveRecord()
+    Topos.destroy()
+    l.destroy()
+
+
 
 
 if __name__=="__main__":
     tk = Tk()
-    configureGame(tk, RP2_PRIVATE_NAME, MAP1_PRIVATE_NAME, "DRS", None)
+    configureGame(tk, TORUS_PRIVATE_NAME, MAP1_PRIVATE_NAME, "DRS", None)

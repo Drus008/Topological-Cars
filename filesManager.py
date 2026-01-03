@@ -9,7 +9,7 @@ from constants import *
 USER_DIR = Path.home() / "TopologicalRacing" / "Maps"
 
 def checkFolders():
-    """Checks if all the folders are created and creates them if aren't created"""
+    """Checks if all the folders are created and creates them if they aren't created."""
     for map in MAPS:
         for space in SPACES:
             direction = Path(USER_DIR / map / space)
@@ -19,8 +19,8 @@ def checkFolders():
 def getRecords(space: str, map: str)-> dict:
     """Gets the records of the players.
     Args:
-        space (str): the private name of the space.
-        map (str): the private name of the map.
+        space (str): The private name of the space.
+        map (str): The private name of the map.
     Returns:
         A dictionari of the form {"time":t, "name":n} with the time on the format min:sec with only one digit to the mins.
     """
@@ -37,31 +37,39 @@ def getRecords(space: str, map: str)-> dict:
     orderedRivals = sorted(rivals, key=lambda x: x["time"])
     return orderedRivals
 
-def saveRecord(map:str, space:str, playerName:str, trajectory:dict):
-        """Saves the record as a file named recordplayer.json on the respective file (map/space/)"""
-        direction = USER_DIR / map / space
-        trajectoryFile = {"map": map, "space":space, "player": playerName, "trajectory":trajectory, "finalTime": trajectory[-1]["t"]}
-        with open(direction /("record"+playerName + ".json"), "w") as f:
-            json.dump(trajectoryFile, f, indent=2)
+def saveRecord(map: str, space: str, playerName: str, trajectory: dict) -> bool:
+    """Saves the record as a file named recordplayer.json in the respective file (map/space/).
+    If a record already existed, only saves the new time if it is lower than the previous one.
+    """
+    directory = USER_DIR / map / space / ("record" + playerName + ".json")
+    finalTime = trajectory[-1]["t"]
+    if directory.exists():
+        with open(directory, "r") as oldRecord:
+            if finalTime >= json.load(oldRecord)["finalTime"]:
+                return False
+    trajectoryFile = {"map": map, "space": space, "player": playerName, "trajectory": trajectory, "finalTime": finalTime}
+    with open(directory, "w") as f:
+        json.dump(trajectoryFile, f, indent=2)
+    return True
 
 
 def loadRecord(space:str, map:str, playerName:str):
     """Loads a record of a previous race into the clone."""
-    direction = USER_DIR / map / space / ("record" + playerName + ".json")
-    with open(direction, 'r', encoding='utf-8') as f:
+    directory = USER_DIR / map / space / ("record" + playerName + ".json")
+    with open(directory, 'r', encoding='utf-8') as f:
         record = json.load(f)
     return record["trajectory"]
 
 
 def loadImage(iconName: str)->Image.Image:
     """Loads an image."""
-    imgShorPath = Path("resources/images/" + iconName + ".png")
-    imgPath = resourcePath(imgShorPath)
+    imgShortPath = Path("resources/images/" + iconName + ".png")
+    imgPath = resourcePath(imgShortPath)
     return Image.open(imgPath)
 
 
 def resourcePath(relativePath):
-    """Returns the absolute path. (works compiled and interpreted)"""
+    """Returns the absolute path (works for both compiled and interpreted)."""
     try:
         basePath = Path(sys._MEIPASS)
     except Exception:
