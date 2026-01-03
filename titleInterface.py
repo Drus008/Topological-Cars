@@ -119,10 +119,10 @@ def createInterface(main:Tk):
         mapsList[i]["label"] = Label(mapsList[i]["frame"], text=mapsList[i]["name"], bg=BGCOLOR, fg=TEXT_COLOR, font=("Segoe UI", SUBSUBTITLE_SIZE))
         mapsList[i]["label"].pack()
 
-        img = loadImage("img").resize(IMG_SIZE)
+        img = loadImage(mapsList[i]["privateName"]).resize(IMG_SIZE)
         mapsList[i]["img"] = ImageTk.PhotoImage(img)
 
-        imgS = loadImage("imgS").resize(IMG_SIZE)
+        imgS = loadImage(mapsList[i]["privateName"]+"S").resize(IMG_SIZE)
         mapsList[i]["imgS"] = ImageTk.PhotoImage(imgS)
 
 
@@ -164,10 +164,10 @@ def createInterface(main:Tk):
         spaceList[i]["label"] = Label(spaceList[i]["frame"], text=spaceList[i]["name"], bg=BGCOLOR, fg=TEXT_COLOR, font=("Segoe UI", SUBSUBTITLE_SIZE))
         spaceList[i]["label"].pack()
 
-        img = loadImage("img").resize(IMG_SIZE)
+        img = loadImage(spaceList[i]["privateName"]).resize(IMG_SIZE)
         spaceList[i]["img"] = ImageTk.PhotoImage(img)
 
-        imgS = loadImage("imgS").resize(IMG_SIZE)
+        imgS = loadImage(spaceList[i]["privateName"]+"S").resize(IMG_SIZE)
         spaceList[i]["imgS"] = ImageTk.PhotoImage(imgS)
 
 

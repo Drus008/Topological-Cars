@@ -1,6 +1,6 @@
 from tkinter import Tk
 
-from topologicalCanvas import torus, KleinBottleV, projectivePlane, topologicalCanvas
+from topologicalCanvas import torus, KleinBottleH, projectivePlane, topologicalCanvas
 from topologicalCar import topologicalCar
 from chronometer import finishLine
 from inGameInterface import layout
@@ -37,7 +37,7 @@ def selectSpace(interface:Tk, space:str, SIZE:float, extraSIZE: float, visualHel
     if space==TORUS_PRIVATE_NAME:
         Topos = torus(interface, dimX= SIZE, dimY= SIZE, windowH=windowSize-extraSIZE, windowW=windowSize, visualHelp= visualHelp)
     elif space==KLEIN_PRIVATE_NAME:
-        Topos = KleinBottleV(interface, dimX= SIZE, dimY= SIZE, windowH=windowSize-extraSIZE, windowW=windowSize, visualHelp= visualHelp)
+        Topos = KleinBottleH(interface, dimX= SIZE, dimY= SIZE, windowH=windowSize-extraSIZE, windowW=windowSize, visualHelp= visualHelp)
     elif space==RP2_PRIVATE_NAME:
         Topos = projectivePlane(interface, dimX= SIZE, dimY= SIZE, windowH=windowSize-extraSIZE, windowW=windowSize, visualHelp= visualHelp)
     return Topos

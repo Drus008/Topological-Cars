@@ -150,7 +150,7 @@ class timeCounter():
         
 
 
-class layout():
+class layout(): # BUG if the speed is small, the number oscilates between 0, 1 and 2
     """The main layout that shows the speed, the time, the number of laps, and the name of the player.
 
     Attributes:

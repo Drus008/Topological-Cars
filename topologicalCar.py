@@ -134,8 +134,7 @@ class topologicalCar():
         if np.dot(self.v,direction2D(self.angle))<0:
             orientation = -orientation
         dt = self.TCanvas.getDelta()
-                                                    #TODO the 0.1 is completely arbitrary
-        turnCoef = (1-1/(self.speed+1)**.2) #Don't allow the car to turn when its speed is low.
+        turnCoef = (1-1/(self.speed/50+1)) #Don't allow the car to turn when its speed is low.
         angle = orientation*dt*self.angVel*turnCoef 
         self.angle += angle
         self.body.TRotation(angle)

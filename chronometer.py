@@ -66,7 +66,7 @@ class finishLine():
 
         amplitude = self.curve.amplitudes[0]
         nSquare = int(np.ceil(amplitude/squareSide))
-  
+
         amplitude = nSquare*squareSide
         center = self.curve.center[0]
         direction = self.curve.center[1]-self.curve.center[0]

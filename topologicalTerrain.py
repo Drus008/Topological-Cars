@@ -166,7 +166,7 @@ def ZHomology(TCanvas:topologicalCanvas) -> terrainManager:
 if __name__=="__main__":
     from tkinter import Tk
     tk = Tk()
-    TCanvas = topologicalCanvas(tk, 1, 1, dimX=750, dimY=750, visualHelp=True)
+    TCanvas = topologicalCanvas(tk, 1, -1, dimX=750, dimY=750, visualHelp=True)
     ZHomology(TCanvas)
     
 

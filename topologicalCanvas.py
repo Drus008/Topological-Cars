@@ -213,14 +213,14 @@ class projectivePlane(topologicalCanvas):
 
 class KleinBottleH(topologicalCanvas):
     """
-    A topological canvas that represents a Klein bottle (H).
+    A topological canvas that represents a Klein bottle (mantains the H orientation).
     """
     def __init__(self, tk, dimX=300, dimY=300, windowW= 400, windowH=400, visualHelp=False):
         super().__init__(tk, 1, -1, dimX, dimY, windowW=windowW, windowH=windowH, visualHelp=visualHelp)
 
 class KleinBottleV(topologicalCanvas):
     """
-    A topological canvas that represents a Klein bottle (V).
+    A topological canvas that represents a Klein bottle (mantains the V orientation).
     """
     def __init__(self, tk, dimX=300, dimY=300, windowW= 400, windowH=400, visualHelp=False):
         super().__init__(tk, -1, 1, dimX, dimY, windowW=windowW, windowH=windowH, visualHelp=visualHelp)
