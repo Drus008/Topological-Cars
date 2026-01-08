@@ -64,6 +64,7 @@ def configureGame(interface:Tk, space: str, mapName:str, playerName:str, rival:s
     car = topologicalCar(Topos, x0=20, y0=20, height=20, width=10, ground=terrain, v0x=0, v0y=0)
 
     timer = finishLine(terrain.terrains[0], car, spaceName=space, mapName=mapName, space=space, playerName=playerName, rivalName=rival)
+    interface.protocol("VM_DELETE_WINDOW", timer.saveRecord)
     l = layout(interface)
 
     while(not Topos.keyStates["escape"]):
@@ -78,8 +79,9 @@ def configureGame(interface:Tk, space: str, mapName:str, playerName:str, rival:s
 
         Topos.canvas.update()
     timer.saveRecord()
-    Topos.destroy()
     l.destroy()
+    Topos.destroy()
+    interface.protocol("VM_DELETE_WINDOW", interface.destroy)
 
 
 

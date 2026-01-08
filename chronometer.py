@@ -1,4 +1,3 @@
-
 from time import time
 import numpy as np
 
@@ -92,10 +91,10 @@ class finishLine():
         """Places de car just behind th finish line"""
         displacement = self.hitbox.position - self.car.body.position
         displacement = displacement - distance*direction2D(self.angle)
-        self.car.body.move(*displacement)
+        self.car.move(displacement)
         self.car.body.TRotation(self.angle-self.car.angle)
         self.car.angle = self.angle
-        self.car.body.Traise()
+        self.car.rise()
 
     def checkLaps(self):
         """Checks if the car has completed a lap and keeps track of how many laps have been completed."""
@@ -122,7 +121,7 @@ class finishLine():
 
 
     def saveRecord(self):
-        if not (self.active and self.counting and self.playerName!=""):
+        if self.laps>self.TOTAL_LAPS and self.playerName!="":
             saveRecord(self.mapName, self.spaceName, self.playerName, self.newTrajectory)
 
     def updateRecord(self):
@@ -168,7 +167,7 @@ class rival(topologicalPolygon):
         rival.step = 0
         rival.hide()
         rival.record = loadRecord(space, map, rivalName)
-        rival.position = np.array([rival.record[0]["x"],rival.record[0]["y"]])
+        rival.TMove(*(np.array([rival.record[0]["x"],rival.record[0]["y"]])-rival.position))
         return rival
     
     def start(self):

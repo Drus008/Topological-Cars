@@ -45,7 +45,6 @@ class topologicalCar():
         """
 
         self.TCanvas = TCanvas
-        self.body = topologicalPolygon(TCanvas, [np.array([x0-width/2,y0-height/2]), np.array([x0+width/2,y0-height/2]), np.array([x0+width/2,y0+height/2]), np.array([x0-width/2,y0+height/2])], fill=color, tags=["topologicalCar"])
         self.ground = ground
         
         self.v = np.array([v0x, v0y], float)
@@ -57,6 +56,14 @@ class topologicalCar():
 
         self.width = width
         self.height = height
+
+        self.createModel(x0, y0, color)
+    
+    def createModel(self, x0:float, y0:float, color=MAINCOLOR):
+        w = self.width
+        h = self.height
+        self.body = topologicalPolygon(self.TCanvas, [np.array([x0-w/2,y0-h/2]), np.array([x0+w/2,y0-h/2]), np.array([x0+w/2,y0+h/2]), np.array([x0-w/2,y0+h/2])], fill=color, tags=["topologicalCar"])
+        #self.tireFL = topologicalPolygon(self.TCanvas, [np.array([x0+w/2-10,y0+h/2-10]), np.array([x0+w/2-10,y0+h/2+10]), np.array([x0+w/2+10,y0+h/2+10]), np.array([x0+w/2+10,y0+h/2-10])], fill="black", tags=["topologicalCar"])
         
     
     def updateCar(self)->None:
@@ -87,8 +94,18 @@ class topologicalCar():
         """
 
         displacement =self.v*self.TCanvas.getDelta()
-        self.body.TMove(*displacement)
+        self.move(displacement)
+        
     
+    def move(self, dp:np.ndarray):
+        dx = dp[0]
+        dy = dp[1]
+        self.body.TMove(dx, dy)
+        #self.tireFL.TMove(dx, dy)
+
+    def rise(self):
+        self.body.Traise()
+        #self.tireFL.Traise()
 
     def calcAcc(self)->None:
         """
